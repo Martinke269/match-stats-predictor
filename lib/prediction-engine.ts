@@ -1,0 +1,228 @@
+import { Team, Prediction, PredictionFactor } from './types';
+
+export class PredictionEngine {
+  /**
+   * Calculate match prediction based on team statistics and form
+   */
+  static predictMatch(homeTeam: Team, awayTeam: Team, matchId: string): Prediction {
+    const factors: PredictionFactor[] = [];
+    
+    // Calculate form score (recent results)
+    const homeFormScore = this.calculateFormScore(homeTeam.form);
+    const awayFormScore = this.calculateFormScore(awayTeam.form);
+    
+    if (homeFormScore > awayFormScore + 1) {
+      factors.push({
+        name: 'Form',
+        impact: 'positive',
+        weight: 0.2,
+        description: `${homeTeam.name} har bedre form (${homeTeam.form.join('')})`
+      });
+    } else if (awayFormScore > homeFormScore + 1) {
+      factors.push({
+        name: 'Form',
+        impact: 'negative',
+        weight: 0.2,
+        description: `${awayTeam.name} har bedre form (${awayTeam.form.join('')})`
+      });
+    }
+
+    // Calculate goal difference
+    const homeGoalDiff = homeTeam.stats.goalsScored - homeTeam.stats.goalsConceded;
+    const awayGoalDiff = awayTeam.stats.goalsScored - awayTeam.stats.goalsConceded;
+    
+    if (homeGoalDiff > awayGoalDiff + 5) {
+      factors.push({
+        name: 'Målforskel',
+        impact: 'positive',
+        weight: 0.15,
+        description: `${homeTeam.name} har bedre målforskel (+${homeGoalDiff})`
+      });
+    } else if (awayGoalDiff > homeGoalDiff + 5) {
+      factors.push({
+        name: 'Målforskel',
+        impact: 'negative',
+        weight: 0.15,
+        description: `${awayTeam.name} har bedre målforskel (+${awayGoalDiff})`
+      });
+    }
+
+    // Home advantage
+    factors.push({
+      name: 'Hjemmebane',
+      impact: 'positive',
+      weight: 0.15,
+      description: `${homeTeam.name} spiller hjemme`
+    });
+
+    // Calculate win percentages
+    const homeWinRate = this.calculateWinRate(homeTeam);
+    const awayWinRate = this.calculateWinRate(awayTeam);
+
+    if (homeWinRate > 0.6) {
+      factors.push({
+        name: 'Sejrsrate',
+        impact: 'positive',
+        weight: 0.1,
+        description: `${homeTeam.name} har ${(homeWinRate * 100).toFixed(0)}% sejrsrate`
+      });
+    }
+
+    // Defensive strength
+    const homeDefense = homeTeam.stats.cleanSheets / (homeTeam.stats.wins + homeTeam.stats.draws + homeTeam.stats.losses);
+    const awayDefense = awayTeam.stats.cleanSheets / (awayTeam.stats.wins + awayTeam.stats.draws + awayTeam.stats.losses);
+
+    if (homeDefense > 0.4) {
+      factors.push({
+        name: 'Defensiv styrke',
+        impact: 'positive',
+        weight: 0.1,
+        description: `${homeTeam.name} har holdt ${homeTeam.stats.cleanSheets} clean sheets`
+      });
+    }
+
+    // Calculate probabilities
+    let homeScore = 50; // Base score
+    
+    // Form impact (max ±15)
+    homeScore += (homeFormScore - awayFormScore) * 3;
+    
+    // Home advantage (+10)
+    homeScore += 10;
+    
+    // Goal difference impact (max ±10)
+    homeScore += Math.min(Math.max((homeGoalDiff - awayGoalDiff) / 2, -10), 10);
+    
+    // Win rate impact (max ±10)
+    homeScore += (homeWinRate - awayWinRate) * 20;
+    
+    // Attacking strength (goals scored per game)
+    const homeAttack = homeTeam.stats.goalsScored / (homeTeam.stats.wins + homeTeam.stats.draws + homeTeam.stats.losses);
+    const awayAttack = awayTeam.stats.goalsScored / (awayTeam.stats.wins + awayTeam.stats.draws + awayTeam.stats.losses);
+    homeScore += (homeAttack - awayAttack) * 5;
+
+    // Normalize to 0-100
+    homeScore = Math.min(Math.max(homeScore, 10), 90);
+    
+    // Calculate probabilities with better distribution
+    // Base draw probability varies based on how evenly matched teams are
+    const scoreDifference = Math.abs(homeScore - 50);
+    const baseDraw = 30 - (scoreDifference / 5); // 20-30% draw probability
+    const drawProbability = Math.max(20, Math.min(30, baseDraw));
+    
+    // Distribute remaining probability between home and away
+    const remainingProb = 100 - drawProbability;
+    const homeWinProbability = (remainingProb * homeScore) / 100;
+    const awayWinProbability = remainingProb - homeWinProbability;
+
+    // Predict score that aligns with probabilities
+    let predictedHomeGoals: number;
+    let predictedAwayGoals: number;
+    
+    // Calculate expected goals based on attack strength
+    const homeExpectedGoals = homeAttack * 1.1; // Home advantage boost
+    const awayExpectedGoals = awayAttack * 0.95; // Away disadvantage
+    
+    if (homeWinProbability > awayWinProbability + 15) {
+      // Clear home win predicted
+      predictedHomeGoals = Math.max(Math.round(homeExpectedGoals * 1.2), 2);
+      predictedAwayGoals = Math.max(Math.round(awayExpectedGoals * 0.8), 0);
+      
+      // Ensure it's actually a win
+      if (predictedHomeGoals <= predictedAwayGoals) {
+        predictedHomeGoals = predictedAwayGoals + 1;
+      }
+    } else if (awayWinProbability > homeWinProbability + 15) {
+      // Clear away win predicted
+      predictedHomeGoals = Math.max(Math.round(homeExpectedGoals * 0.8), 0);
+      predictedAwayGoals = Math.max(Math.round(awayExpectedGoals * 1.2), 2);
+      
+      // Ensure it's actually a win
+      if (predictedAwayGoals <= predictedHomeGoals) {
+        predictedAwayGoals = predictedHomeGoals + 1;
+      }
+    } else if (drawProbability > Math.max(homeWinProbability, awayWinProbability)) {
+      // Draw is most likely
+      const avgGoals = (homeExpectedGoals + awayExpectedGoals) / 2;
+      predictedHomeGoals = Math.round(avgGoals);
+      predictedAwayGoals = predictedHomeGoals; // Same score for draw
+    } else {
+      // Close match - slight favorite
+      predictedHomeGoals = Math.round(homeExpectedGoals);
+      predictedAwayGoals = Math.round(awayExpectedGoals);
+      
+      // Adjust to match probability leader
+      if (homeWinProbability > awayWinProbability && predictedHomeGoals <= predictedAwayGoals) {
+        predictedHomeGoals = predictedAwayGoals + 1;
+      } else if (awayWinProbability > homeWinProbability && predictedAwayGoals <= predictedHomeGoals) {
+        predictedAwayGoals = predictedHomeGoals + 1;
+      }
+    }
+
+    // Calculate confidence based on how decisive the prediction is
+    // Confidence should correlate with the margin of the prediction
+    const maxProb = Math.max(homeWinProbability, drawProbability, awayWinProbability);
+    const secondMaxProb = [homeWinProbability, drawProbability, awayWinProbability]
+      .sort((a, b) => b - a)[1];
+    
+    // The margin between the top prediction and second place
+    const margin = maxProb - secondMaxProb;
+    
+    // Base confidence on the margin:
+    // - Small margin (5-10%): Low confidence (50-60%)
+    // - Medium margin (10-20%): Medium confidence (60-75%)
+    // - Large margin (20-30%): High confidence (75-85%)
+    // - Very large margin (30%+): Very high confidence (85-95%)
+    let confidence = 45 + (margin * 1.5);
+    
+    // Boost confidence if multiple factors align
+    const positiveFactors = factors.filter(f => f.impact === 'positive').length;
+    const negativeFactors = factors.filter(f => f.impact === 'negative').length;
+    const factorAlignment = Math.abs(positiveFactors - negativeFactors);
+    
+    // Add up to 10% for strong factor alignment
+    if (factorAlignment >= 3) {
+      confidence += 10;
+    } else if (factorAlignment >= 2) {
+      confidence += 5;
+    }
+    
+    // Cap between 50% and 95%
+    confidence = Math.min(Math.max(Math.round(confidence), 50), 95);
+
+    // Debug logging
+    console.log(`Match: ${matchId}`);
+    console.log(`  Probabilities: Home=${homeWinProbability.toFixed(1)}%, Draw=${drawProbability.toFixed(1)}%, Away=${awayWinProbability.toFixed(1)}%`);
+    console.log(`  Predicted Score: ${predictedHomeGoals}-${predictedAwayGoals}`);
+    console.log(`  Margin: ${margin.toFixed(1)}%`);
+    console.log(`  Confidence: ${confidence}%`);
+
+    return {
+      matchId,
+      homeWinProbability: Math.round(homeWinProbability * 10) / 10,
+      drawProbability: Math.round(drawProbability * 10) / 10,
+      awayWinProbability: Math.round(awayWinProbability * 10) / 10,
+      predictedScore: {
+        home: predictedHomeGoals,
+        away: predictedAwayGoals
+      },
+      confidence: Math.round(confidence),
+      factors
+    };
+  }
+
+  private static calculateFormScore(form: string[]): number {
+    let score = 0;
+    form.forEach((result, index) => {
+      const weight = form.length - index; // Recent results have more weight
+      if (result === 'W') score += 3 * weight;
+      else if (result === 'D') score += 1 * weight;
+    });
+    return score;
+  }
+
+  private static calculateWinRate(team: Team): number {
+    const totalGames = team.stats.wins + team.stats.draws + team.stats.losses;
+    return totalGames > 0 ? team.stats.wins / totalGames : 0;
+  }
+}
