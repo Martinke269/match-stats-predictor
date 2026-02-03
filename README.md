@@ -7,7 +7,7 @@ En avanceret match statistik og forudsigelsesmotor for sportskampe med **Machine
 ## 🎯 Features
 
 - **Machine Learning Prediction Engine**: Neural network med deep learning til intelligente forudsigelser
-- **Dual Prediction Modes**: Vælg mellem statistisk analyse eller ML-baserede forudsigelser
+- **Dual Prediction Modes**: Vælg mellem statistisk analyse eller ML-baserede  forudsigelser
 - **Live Training**: Træn ML-modellen direkte i browseren med historiske data
 - **Intelligent Prediction Engine**: Analyserer flere faktorer for at forudsige kampresultater
 - **Detaljerede Statistikker**: Viser omfattende holdstatistikker og form
