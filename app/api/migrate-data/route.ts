@@ -11,7 +11,32 @@ import { Team } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 // Server-side insert functions
-async function insertTeam(supabase: any, team: Team, league: string): Promise<string | null> {
+async function upsertTeam(supabase: any, team: Team, league: string): Promise<string | null> {
+  // First try to find existing team
+  const { data: existing } = await supabase
+    .from('teams')
+    .select('id')
+    .eq('name', team.name)
+    .eq('league', league)
+    .single();
+  
+  if (existing) {
+    // Update existing team
+    const { error: updateError } = await supabase
+      .from('teams')
+      .update({
+        stats: team.stats,
+        form: team.form
+      })
+      .eq('id', existing.id);
+    
+    if (updateError) {
+      console.error('Error updating team:', updateError);
+    }
+    return existing.id;
+  }
+  
+  // Insert new team
   const { data, error } = await supabase
     .from('teams')
     .insert({
@@ -31,13 +56,27 @@ async function insertTeam(supabase: any, team: Team, league: string): Promise<st
   return data.id;
 }
 
-async function insertMatch(
+async function upsertMatch(
   supabase: any,
   league: string,
   homeTeamId: string,
   awayTeamId: string,
   date: Date
 ): Promise<string | null> {
+  // Check if match already exists
+  const { data: existing } = await supabase
+    .from('matches')
+    .select('id')
+    .eq('home_team_id', homeTeamId)
+    .eq('away_team_id', awayTeamId)
+    .eq('date', date.toISOString())
+    .single();
+  
+  if (existing) {
+    return existing.id;
+  }
+  
+  // Insert new match
   const { data, error } = await supabase
     .from('matches')
     .insert({
@@ -75,7 +114,7 @@ export async function POST() {
     // Migrate Premier League
     const plTeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(premierLeagueTeams)) {
-      const teamId = await insertTeam(supabase, team, 'Premier League');
+      const teamId = await upsertTeam(supabase, team, 'Premier League');
       if (teamId) {
         plTeamIds[key] = teamId;
         results.teams++;
@@ -102,7 +141,7 @@ export async function POST() {
       const homeId = plTeamIds[match.home];
       const awayId = plTeamIds[match.away];
       if (homeId && awayId) {
-        const matchId = await insertMatch(supabase, 'Premier League', homeId, awayId, match.date);
+        const matchId = await upsertMatch(supabase, 'Premier League', homeId, awayId, match.date);
         if (matchId) {
           results.matches++;
         } else {
@@ -114,7 +153,7 @@ export async function POST() {
     // Migrate La Liga
     const laLigaTeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(laLigaTeams)) {
-      const teamId = await insertTeam(supabase, team, 'La Liga');
+      const teamId = await upsertTeam(supabase, team, 'La Liga');
       if (teamId) {
         laLigaTeamIds[key] = teamId;
         results.teams++;
@@ -126,7 +165,7 @@ export async function POST() {
     // Migrate Bundesliga
     const bundesligaTeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(bundesligaTeams)) {
-      const teamId = await insertTeam(supabase, team, 'Bundesliga');
+      const teamId = await upsertTeam(supabase, team, 'Bundesliga');
       if (teamId) {
         bundesligaTeamIds[key] = teamId;
         results.teams++;
@@ -138,7 +177,7 @@ export async function POST() {
     // Migrate Serie A
     const serieATeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(serieATeams)) {
-      const teamId = await insertTeam(supabase, team, 'Serie A');
+      const teamId = await upsertTeam(supabase, team, 'Serie A');
       if (teamId) {
         serieATeamIds[key] = teamId;
         results.teams++;
@@ -150,7 +189,7 @@ export async function POST() {
     // Migrate Ligue 1
     const ligue1TeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(ligue1Teams)) {
-      const teamId = await insertTeam(supabase, team, 'Ligue 1');
+      const teamId = await upsertTeam(supabase, team, 'Ligue 1');
       if (teamId) {
         ligue1TeamIds[key] = teamId;
         results.teams++;
@@ -162,7 +201,7 @@ export async function POST() {
     // Migrate Superligaen
     const superligaenTeamIds: Record<string, string> = {};
     for (const [key, team] of Object.entries(superligaenTeams)) {
-      const teamId = await insertTeam(supabase, team, 'Superligaen');
+      const teamId = await upsertTeam(supabase, team, 'Superligaen');
       if (teamId) {
         superligaenTeamIds[key] = teamId;
         results.teams++;
