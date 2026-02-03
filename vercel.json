@@ -12,5 +12,16 @@
       "path": "/api/cron/update-matches",
       "schedule": "0 10 * * 2"
     }
+  ],
+  "headers": [
+    {
+      "source": "/api/cron/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    }
   ]
 }
