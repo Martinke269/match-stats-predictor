@@ -1,0 +1,44 @@
+name: Tuesday Match Updates
+
+on:
+  schedule:
+    # Hver tirsdag kl. 06:00 UTC
+    - cron: '0 6 * * 2'
+    # Hver tirsdag kl. 08:00 UTC
+    - cron: '0 8 * * 2'
+    # Hver tirsdag kl. 10:00 UTC
+    - cron: '0 10 * * 2'
+  workflow_dispatch: # Tillader manuel kørsel
+
+jobs:
+  fetch-matches:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 6 * * 2' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Fetch Matches
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://aimatchpredictor.netlify.app/api/cron/fetch-matches
+
+  generate-predictions:
+    runs-on: ubuntu-latest
+    needs: fetch-matches
+    if: github.event.schedule == '0 8 * * 2' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Generate Predictions
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://aimatchpredictor.netlify.app/api/cron/generate-predictions
+
+  update-matches:
+    runs-on: ubuntu-latest
+    needs: generate-predictions
+    if: github.event.schedule == '0 10 * * 2' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Update Matches
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://aimatchpredictor.netlify.app/api/cron/update-matches
