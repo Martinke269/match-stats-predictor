@@ -3,6 +3,7 @@ import type * as React from "react";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className={`${fontSans.variable} font-sans antialiased`}>
           {children}
           <Toaster />
+          <SpeedInsights />
       </body>
     </html>
   );
