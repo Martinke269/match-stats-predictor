@@ -1,5 +1,7 @@
 # Match Stats Predictor
 
+<!-- Deployment trigger -->
+
 En avanceret match statistik og forudsigelsesmotor for sportskampe med **Machine Learning**, bygget med Next.js, TypeScript, og Tailwind CSS.
 
 ## 🎯 Features
