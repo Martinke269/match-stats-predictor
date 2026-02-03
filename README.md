@@ -1,6 +1,6 @@
 # Match Stats Predictor
 
-<!-- Deployment trigger -->
+<!-- Vercel deployment update -->
 
 En avanceret match statistik og forudsigelsesmotor for sportskampe med **Machine Learning**, bygget med Next.js, TypeScript, og Tailwind CSS.
 
