@@ -56,12 +56,6 @@ export function LeagueMatchesSection({
     return <Minus className="h-5 w-5 text-yellow-500" />;
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 85) return 'bg-green-500';
-    if (confidence >= 80) return 'bg-green-600';
-    return 'bg-yellow-500';
-  };
-
   // Don't render if no predictions
   if (!predictions || predictions.length === 0) {
     return null;
@@ -84,111 +78,120 @@ export function LeagueMatchesSection({
           const schedule = matchSchedule.find(s => s.match === match);
           const homeTeam = match.split(' vs ')[0];
           const awayTeam = match.split(' vs ')[1];
+          
+          const predictedOutcome = 
+            prediction.homeWinProbability > prediction.awayWinProbability && prediction.homeWinProbability > prediction.drawProbability
+              ? '1'
+              : prediction.awayWinProbability > prediction.homeWinProbability && prediction.awayWinProbability > prediction.drawProbability
+              ? '2'
+              : 'X';
 
           return (
             <Link key={match} href={leagueLink}>
-              <Card className={`bg-slate-800/50 backdrop-blur-sm border-slate-700 ${borderColor} transition-all cursor-pointer`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className={`${timeColor} border-current`}>
+              <Card className={`bg-slate-800/50 backdrop-blur-sm border-slate-700 ${borderColor} transition-all cursor-pointer hover:scale-[1.02]`}>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <Badge variant="outline" className={`${timeColor} border-current text-sm px-3 py-1`}>
                       {schedule?.day} {schedule?.time}
                     </Badge>
                   </div>
-                  <CardTitle className="text-white text-base sm:text-lg">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate flex-1 text-left">{homeTeam}</span>
-                      {getResultIcon(prediction.homeWinProbability, prediction.awayWinProbability)}
-                      <span className="truncate flex-1 text-right">{awayTeam}</span>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Prediction Result - 1X2 */}
-                  <div className="text-center mb-4">
-                    <div className="inline-block bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/40 rounded-lg px-6 py-3">
-                      <div className="text-xs text-blue-200 mb-1">PREDICTION</div>
-                      <div className="text-3xl sm:text-4xl font-bold text-white">
-                        {prediction.homeWinProbability > prediction.awayWinProbability && prediction.homeWinProbability > prediction.drawProbability
-                          ? '1'
-                          : prediction.awayWinProbability > prediction.homeWinProbability && prediction.awayWinProbability > prediction.drawProbability
-                          ? '2'
-                          : 'X'}
-                      </div>
-                      <div className="text-xs text-slate-300 mt-1">
-                        {prediction.homeWinProbability > prediction.awayWinProbability && prediction.homeWinProbability > prediction.drawProbability
-                          ? 'Hjemmesejr'
-                          : prediction.awayWinProbability > prediction.homeWinProbability && prediction.awayWinProbability > prediction.drawProbability
-                          ? 'Udesejr'
-                          : 'Uafgjort'}
-                      </div>
-                    </div>
+                  
+                  {/* Team Names and Trend Icon */}
+                  <div className="flex items-center justify-between gap-3 mb-6">
+                    <div className="text-xl sm:text-2xl font-bold text-white text-left flex-1">{homeTeam}</div>
+                    {getResultIcon(prediction.homeWinProbability, prediction.awayWinProbability)}
+                    <div className="text-xl sm:text-2xl font-bold text-white text-right flex-1">{awayTeam}</div>
                   </div>
 
-                  {/* Predicted Score - De-emphasized */}
-                  <div className="text-center mb-4">
-                    <div className="text-lg text-slate-400">
+                  {/* Large Score Display */}
+                  <div className="text-center mb-2">
+                    <div className="text-5xl sm:text-6xl font-bold text-white tracking-wider">
                       {prediction.predictedScore.home} - {prediction.predictedScore.away}
                     </div>
-                    <div className="text-xs text-slate-500">Forudsagt score</div>
+                    <div className="text-sm text-slate-400 mt-2">Forudsagt resultat</div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* 1X2 Buttons */}
+                  <div className="flex items-center gap-2 justify-center">
+                    <span className="text-sm text-slate-300 font-semibold">1X2:</span>
+                    <div className="flex gap-2">
+                      <div className={`w-12 h-12 flex items-center justify-center rounded-lg font-bold text-lg transition-all ${
+                        predictedOutcome === '1' 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-slate-700 text-slate-400'
+                      }`}>
+                        1
+                      </div>
+                      <div className={`w-12 h-12 flex items-center justify-center rounded-lg font-bold text-lg transition-all ${
+                        predictedOutcome === 'X' 
+                          ? 'bg-slate-600 text-white' 
+                          : 'bg-slate-700 text-slate-400'
+                      }`}>
+                        X
+                      </div>
+                      <div className={`w-12 h-12 flex items-center justify-center rounded-lg font-bold text-lg transition-all ${
+                        predictedOutcome === '2' 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-slate-700 text-slate-400'
+                      }`}>
+                        2
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Probabilities */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Hjemmesejr</span>
-                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
-                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
-                          <div 
-                            className="bg-green-500 h-2 rounded-full transition-all"
-                            style={{ width: `${prediction.homeWinProbability}%` }}
-                          />
-                        </div>
-                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
-                          {prediction.homeWinProbability}%
-                        </span>
+                  {/* Probability Bars */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-slate-300 w-24 flex-shrink-0">Hjemmesejr</span>
+                      <div className="flex-1 bg-slate-700 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-green-500 h-full rounded-full transition-all"
+                          style={{ width: `${prediction.homeWinProbability}%` }}
+                        />
                       </div>
+                      <span className="text-sm font-bold text-white w-12 text-right">
+                        {prediction.homeWinProbability.toFixed(1)}%
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Uafgjort</span>
-                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
-                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
-                          <div 
-                            className="bg-yellow-500 h-2 rounded-full transition-all"
-                            style={{ width: `${prediction.drawProbability}%` }}
-                          />
-                        </div>
-                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
-                          {prediction.drawProbability}%
-                        </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-slate-300 w-24 flex-shrink-0">Uafgjort</span>
+                      <div className="flex-1 bg-slate-700 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-yellow-500 h-full rounded-full transition-all"
+                          style={{ width: `${prediction.drawProbability}%` }}
+                        />
                       </div>
+                      <span className="text-sm font-bold text-white w-12 text-right">
+                        {prediction.drawProbability.toFixed(1)}%
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Udesejr</span>
-                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
-                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
-                          <div 
-                            className="bg-red-500 h-2 rounded-full transition-all"
-                            style={{ width: `${prediction.awayWinProbability}%` }}
-                          />
-                        </div>
-                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
-                          {prediction.awayWinProbability}%
-                        </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-slate-300 w-24 flex-shrink-0">Udesejr</span>
+                      <div className="flex-1 bg-slate-700 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-red-500 h-full rounded-full transition-all"
+                          style={{ width: `${prediction.awayWinProbability}%` }}
+                        />
                       </div>
+                      <span className="text-sm font-bold text-white w-12 text-right">
+                        {prediction.awayWinProbability.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
 
                   {/* Key Factors */}
                   {prediction.factors.length > 0 && (
-                    <div className="border-t border-slate-700 pt-3">
-                      <div className="text-xs font-semibold text-slate-400 mb-2">Nøglefaktorer:</div>
-                      <div className="space-y-1">
-                        {prediction.factors.slice(0, 3).map((factor, i) => (
+                    <div className="border-t border-slate-700 pt-4 mt-4">
+                      <div className="text-sm font-semibold text-slate-300 mb-3">Nøglefaktorer:</div>
+                      <div className="space-y-2">
+                        {prediction.factors.slice(0, 4).map((factor, i) => (
                           <div key={i} className="flex items-start gap-2">
-                            <span className="text-xs">
+                            <span className="text-base flex-shrink-0 mt-0.5">
                               {factor.impact === 'positive' ? '✅' : factor.impact === 'negative' ? '⚠️' : 'ℹ️'}
                             </span>
-                            <span className="text-xs text-slate-300 leading-tight">
+                            <span className="text-sm text-slate-300 leading-relaxed">
                               {factor.description}
                             </span>
                           </div>
