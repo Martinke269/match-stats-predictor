@@ -16,6 +16,9 @@ export interface PowerRanking {
   strengths: string[];
   weaknesses: string[];
   trend: 'up' | 'down' | 'stable';
+  previousRank?: number;
+  positionChange?: number;
+  movementReason?: string;
 }
 
 export interface LeaguePowerRanking {
@@ -137,6 +140,75 @@ function determineTrend(form: string[]): 'up' | 'down' | 'stable' {
   return 'stable';
 }
 
+function generateMovementReason(
+  team: Team,
+  positionChange: number,
+  strengths: string[],
+  weaknesses: string[],
+  trend: 'up' | 'down' | 'stable'
+): string {
+  if (positionChange === 0) {
+    return 'Holder positionen med stabile præstationer';
+  }
+  
+  const gamesPlayed = team.stats.wins + team.stats.draws + team.stats.losses;
+  const recentForm = team.form.slice(0, 3);
+  const recentWins = recentForm.filter(f => f === 'W').length;
+  const recentLosses = recentForm.filter(f => f === 'L').length;
+  
+  if (positionChange > 0) {
+    // Team moved up
+    const reasons: string[] = [];
+    
+    if (recentWins >= 2) {
+      reasons.push('stærk sejrsrække');
+    }
+    if (strengths.includes('Fremragende form')) {
+      reasons.push('fremragende form');
+    }
+    if (strengths.includes('Stærkt angreb')) {
+      reasons.push('imponerende offensiv');
+    }
+    if (strengths.includes('Solid forsvar')) {
+      reasons.push('defensiv stabilitet');
+    }
+    if (team.stats.goalsScored / gamesPlayed > 2 && team.stats.cleanSheets / gamesPlayed > 0.4) {
+      reasons.push('balance mellem angreb og forsvar');
+    }
+    
+    if (reasons.length === 0) {
+      return 'Forbedrede præstationer løfter holdet';
+    }
+    
+    return `Stiger grundet ${reasons.slice(0, 2).join(' og ')}`;
+  } else {
+    // Team moved down
+    const reasons: string[] = [];
+    
+    if (recentLosses >= 2) {
+      reasons.push('flere nederlag');
+    }
+    if (weaknesses.includes('Dårlig form')) {
+      reasons.push('dårlig form');
+    }
+    if (weaknesses.includes('Defensiv sårbarhed')) {
+      reasons.push('defensive problemer');
+    }
+    if (weaknesses.includes('Manglende scoringsevne')) {
+      reasons.push('manglende mål');
+    }
+    if (weaknesses.includes('Inkonsistente resultater')) {
+      reasons.push('inkonsistens');
+    }
+    
+    if (reasons.length === 0) {
+      return 'Faldende præstationer påvirker placeringen';
+    }
+    
+    return `Falder på grund af ${reasons.slice(0, 2).join(' og ')}`;
+  }
+}
+
 function calculateChampionshipProbability(powerScore: number, maxScore: number): number {
   // Exponential distribution favoring top teams
   const normalized = powerScore / maxScore;
@@ -181,17 +253,57 @@ export function generateLeaguePowerRanking(
     sum + calculateChampionshipProbability(t.powerScore, maxScore), 0
   );
   
-  // Create final rankings
+  // Simulate previous week's rankings based on form without most recent game
+  const previousWeekRankings = Object.values(teams).map(team => {
+    // Remove the most recent game from form to simulate last week
+    const previousForm = [...team.form.slice(1), team.form[0]]; // Rotate form
+    const previousTeam = { ...team, form: previousForm };
+    const previousScore = calculatePowerScore(previousTeam);
+    return {
+      teamId: team.id,
+      teamName: team.name, // Add for stable sorting
+      score: previousScore
+    };
+  });
+  
+  // Sort with stable tie-breaking to ensure deterministic results
+  previousWeekRankings.sort((a, b) => {
+    const scoreDiff = b.score - a.score;
+    if (Math.abs(scoreDiff) < 0.01) {
+      // Use team name for stable tie-breaking
+      return a.teamName.localeCompare(b.teamName);
+    }
+    return scoreDiff;
+  });
+  const previousRankMap = new Map(
+    previousWeekRankings.map((pr, index) => [pr.teamId, index + 1])
+  );
+  
+  // Create final rankings with position changes
   const rankings: PowerRanking[] = teamRankings.map((tr, index) => {
+    const currentRank = index + 1;
+    const previousRank = previousRankMap.get(tr.team.id) || currentRank;
+    const positionChange = previousRank - currentRank; // Positive = moved up
+    const movementReason = generateMovementReason(
+      tr.team,
+      positionChange,
+      tr.strengths,
+      tr.weaknesses,
+      tr.trend
+    );
+    
     const rawProbability = calculateChampionshipProbability(tr.powerScore, maxScore);
     return {
-      rank: index + 1,
+      rank: currentRank,
       team: tr.team,
       powerScore: Math.round(tr.powerScore * 10) / 10,
       championshipProbability: Math.round((rawProbability / totalProbability) * 100 * 10) / 10,
       strengths: tr.strengths,
       weaknesses: tr.weaknesses,
-      trend: tr.trend
+      trend: tr.trend,
+      previousRank,
+      positionChange,
+      movementReason
     };
   });
   

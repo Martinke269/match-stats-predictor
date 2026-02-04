@@ -142,18 +142,31 @@ export default function PowerRankingsPage() {
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         {/* Rank & Team */}
                         <div className="flex items-center gap-4 flex-1 min-w-[200px]">
-                          <div
-                            className={`text-2xl font-bold w-10 h-10 rounded-full flex items-center justify-center ${
-                              ranking.rank === 1
-                                ? 'bg-yellow-500 text-slate-900'
-                                : ranking.rank === 2
-                                ? 'bg-gray-300 text-slate-900'
-                                : ranking.rank === 3
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-slate-600 text-white'
-                            }`}
-                          >
-                            {ranking.rank}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`text-2xl font-bold w-10 h-10 rounded-full flex items-center justify-center ${
+                                ranking.rank === 1
+                                  ? 'bg-yellow-500 text-slate-900'
+                                  : ranking.rank === 2
+                                  ? 'bg-gray-300 text-slate-900'
+                                  : ranking.rank === 3
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-slate-600 text-white'
+                              }`}
+                            >
+                              {ranking.rank}
+                            </div>
+                            {ranking.positionChange !== undefined && ranking.positionChange !== 0 && (
+                              <div
+                                className={`text-sm font-bold px-2 py-1 rounded ${
+                                  ranking.positionChange > 0
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-red-600 text-white'
+                                }`}
+                              >
+                                {ranking.positionChange > 0 ? '↑' : '↓'} {Math.abs(ranking.positionChange)}
+                              </div>
+                            )}
                           </div>
                           <div>
                             <h4 className="text-xl font-bold text-white">{ranking.team.name}</h4>
@@ -165,6 +178,11 @@ export default function PowerRankingsPage() {
                                 </span>
                               </Badge>
                             </div>
+                            {ranking.movementReason && (
+                              <p className="text-sm text-gray-300 mt-1 italic">
+                                {ranking.movementReason}
+                              </p>
+                            )}
                           </div>
                         </div>
 
