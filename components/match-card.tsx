@@ -4,9 +4,11 @@ import { Match, Prediction } from '@/lib/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, TrendingUp, Shield, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, TrendingUp, Shield, Target, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { da } from 'date-fns/locale';
+import { exportSinglePredictionToPDF } from '@/lib/utils/pdf-export';
 
 interface MatchCardProps {
   match: Match;
@@ -15,6 +17,10 @@ interface MatchCardProps {
 
 export function MatchCard({ match, prediction }: MatchCardProps) {
   const { homeTeam, awayTeam, date, league } = match;
+  
+  const handleExportPDF = () => {
+    exportSinglePredictionToPDF(match, prediction);
+  };
   
   const getFormBadgeColor = (result: string) => {
     switch (result) {
@@ -50,11 +56,22 @@ export function MatchCard({ match, prediction }: MatchCardProps) {
               {format(date, 'EEE d. MMM, HH:mm', { locale: da })}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <TrendingUp className={`h-4 w-4 ${getConfidenceColor(prediction.confidence)}`} />
-            <span className={`text-sm font-semibold ${getConfidenceColor(prediction.confidence)}`}>
-              {prediction.confidence}% sikkerhed
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className={`h-4 w-4 ${getConfidenceColor(prediction.confidence)}`} />
+              <span className={`text-sm font-semibold ${getConfidenceColor(prediction.confidence)}`}>
+                {prediction.confidence}% sikkerhed
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
           </div>
         </div>
       </CardHeader>

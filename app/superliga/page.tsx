@@ -1,14 +1,20 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generateSuperligaPredictions } from '@/lib/superliga-predictions';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Trophy, Calendar, Home, Download } from 'lucide-react';
 import Link from 'next/link';
+import { exportLeaguePredictionsToPDF } from '@/lib/utils/league-pdf-helper';
+import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export default function SuperligaPage() {
   const predictions = generateSuperligaPredictions();
+
+  const handleExportAllPDF = () => {
+    exportLeaguePredictionsToPDF(predictions, 'Superligaen', 'Kampdag 25');
+  };
 
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
@@ -16,13 +22,7 @@ export default function SuperligaPage() {
     return <Minus className="h-5 w-5 text-yellow-500" />;
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 75) return 'bg-green-500';
-    if (confidence >= 60) return 'bg-yellow-500';
-    return 'bg-orange-500';
-  };
-
-  // These are the ACTUAL matches from the user's uploaded image
+  // Match schedule
   const matchSchedule = [
     { match: 'AGF vs OB', day: 'Fredag', time: '19:00' },
     { match: 'FC Nordsjælland vs SønderjyskE', day: 'Søndag', time: '14:00' },
@@ -54,8 +54,20 @@ export default function SuperligaPage() {
               <Calendar className="h-5 w-5" />
               <span>Kampdag 25 af 38</span>
             </div>
+            <div className="mt-4">
+              <Button 
+                onClick={handleExportAllPDF}
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Eksporter Alle til PDF
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* AI Disclaimer */}
+        <AIDisclaimer />
 
         {/* Match Predictions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -135,12 +147,26 @@ export default function SuperligaPage() {
                     </div>
                   </div>
 
+                  {/* Confidence Badge */}
+                  <div className="flex items-center justify-center mb-3">
+                    <Badge 
+                      variant="secondary" 
+                      className={`${
+                        prediction.confidence >= 70 ? 'bg-green-500/20 text-green-300 border-green-500' :
+                        prediction.confidence >= 50 ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500' :
+                        'bg-orange-500/20 text-orange-300 border-orange-500'
+                      }`}
+                    >
+                      🎯 Tillid: {prediction.confidence}%
+                    </Badge>
+                  </div>
+
                   {/* Key Factors */}
                   {prediction.factors.length > 0 && (
                     <div className="border-t border-slate-700 pt-3">
                       <div className="text-xs font-semibold text-slate-400 mb-2">Nøglefaktorer:</div>
                       <div className="space-y-1">
-                        {prediction.factors.slice(0, 3).map((factor, i) => (
+                        {prediction.factors.slice(0, 4).map((factor, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <span className="text-xs">
                               {factor.impact === 'positive' ? '✅' : '⚠️'}

@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus, Trophy } from 'lucide-react';
@@ -48,8 +50,6 @@ export function LeagueMatchesSection({
   borderColor,
   timeColor,
 }: LeagueMatchesSectionProps) {
-  if (predictions.length === 0) return null;
-
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
     if (awayProb > homeProb + 10) return <TrendingDown className="h-5 w-5 text-red-500" />;
@@ -61,6 +61,11 @@ export function LeagueMatchesSection({
     if (confidence >= 80) return 'bg-green-600';
     return 'bg-yellow-500';
   };
+
+  // Don't render if no predictions
+  if (!predictions || predictions.length === 0) {
+    return null;
+  }
 
   return (
     <>

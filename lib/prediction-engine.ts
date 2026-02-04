@@ -3,13 +3,38 @@ import { Team, Prediction, PredictionFactor } from './types';
 export class PredictionEngine {
   /**
    * Calculate match prediction based on team statistics and form
+   * @param homeTeam - Home team data
+   * @param awayTeam - Away team data
+   * @param matchId - Unique match identifier
+   * @param options - Optional configuration including winter break detection
    */
-  static predictMatch(homeTeam: Team, awayTeam: Team, matchId: string): Prediction {
+  static predictMatch(
+    homeTeam: Team, 
+    awayTeam: Team, 
+    matchId: string,
+    options?: {
+      afterWinterBreak?: boolean;
+      winterBreakMonths?: number; // How many months since last match
+    }
+  ): Prediction {
     const factors: PredictionFactor[] = [];
+    const afterWinterBreak = options?.afterWinterBreak || false;
+    const winterBreakMonths = options?.winterBreakMonths || 2;
     
-    // Calculate form score (recent results)
-    const homeFormScore = this.calculateFormScore(homeTeam.form);
-    const awayFormScore = this.calculateFormScore(awayTeam.form);
+    // Winter break warning - form is less reliable
+    if (afterWinterBreak) {
+      factors.push({
+        name: 'Vinterpause',
+        impact: 'negative',
+        weight: 0.25,
+        description: `⚠️ ${winterBreakMonths} måneders vinterpause - alle hold starter fra 0. Resultater er meget usikre!`
+      });
+    }
+    
+    // Calculate form score (recent results) - but reduce weight after winter break
+    const formReliability = afterWinterBreak ? 0.4 : 1.0; // Form is only 40% as reliable after break
+    const homeFormScore = this.calculateFormScore(homeTeam.form) * formReliability;
+    const awayFormScore = this.calculateFormScore(awayTeam.form) * formReliability;
     
     if (homeFormScore > awayFormScore + 1) {
       factors.push({
@@ -84,31 +109,46 @@ export class PredictionEngine {
     // Calculate probabilities
     let homeScore = 50; // Base score
     
-    // Form impact (max ±15)
-    homeScore += (homeFormScore - awayFormScore) * 3;
+    // After winter break, reduce the impact of all factors
+    const impactMultiplier = afterWinterBreak ? 0.5 : 1.0;
     
-    // Home advantage (+10)
-    homeScore += 10;
+    // Form impact (max ±15, reduced after winter break)
+    homeScore += (homeFormScore - awayFormScore) * 3 * impactMultiplier;
     
-    // Goal difference impact (max ±10)
-    homeScore += Math.min(Math.max((homeGoalDiff - awayGoalDiff) / 2, -10), 10);
+    // Home advantage (+10, slightly reduced after winter break)
+    homeScore += 10 * (afterWinterBreak ? 0.7 : 1.0);
     
-    // Win rate impact (max ±10)
-    homeScore += (homeWinRate - awayWinRate) * 20;
+    // Goal difference impact (max ±10, reduced after winter break)
+    homeScore += Math.min(Math.max((homeGoalDiff - awayGoalDiff) / 2, -10), 10) * impactMultiplier;
+    
+    // Win rate impact (max ±10, reduced after winter break)
+    homeScore += (homeWinRate - awayWinRate) * 20 * impactMultiplier;
     
     // Attacking strength (goals scored per game)
     const homeAttack = homeTeam.stats.goalsScored / (homeTeam.stats.wins + homeTeam.stats.draws + homeTeam.stats.losses);
     const awayAttack = awayTeam.stats.goalsScored / (awayTeam.stats.wins + awayTeam.stats.draws + awayTeam.stats.losses);
-    homeScore += (homeAttack - awayAttack) * 5;
+    homeScore += (homeAttack - awayAttack) * 5 * impactMultiplier;
 
-    // Normalize to 0-100
-    homeScore = Math.min(Math.max(homeScore, 10), 90);
+    // Normalize to 0-100, but keep closer to 50 after winter break
+    if (afterWinterBreak) {
+      // Pull score towards 50 (more uncertainty)
+      homeScore = 50 + (homeScore - 50) * 0.6;
+      homeScore = Math.min(Math.max(homeScore, 25), 75);
+    } else {
+      homeScore = Math.min(Math.max(homeScore, 10), 90);
+    }
     
     // Calculate probabilities with better distribution
     // Base draw probability varies based on how evenly matched teams are
     const scoreDifference = Math.abs(homeScore - 50);
-    const baseDraw = 30 - (scoreDifference / 5); // 20-30% draw probability
-    const drawProbability = Math.max(20, Math.min(30, baseDraw));
+    let baseDraw = 30 - (scoreDifference / 5); // 20-30% draw probability
+    
+    // After winter break, increase draw probability (more unpredictable)
+    if (afterWinterBreak) {
+      baseDraw += 5; // Increase base draw probability by 5%
+    }
+    
+    const drawProbability = Math.max(20, Math.min(35, baseDraw));
     
     // Distribute remaining probability between home and away
     const remainingProb = 100 - drawProbability;
@@ -187,15 +227,16 @@ export class PredictionEngine {
       confidence += 5;
     }
     
-    // Cap between 50% and 95%
-    confidence = Math.min(Math.max(Math.round(confidence), 50), 95);
-
-    // Debug logging
-    console.log(`Match: ${matchId}`);
-    console.log(`  Probabilities: Home=${homeWinProbability.toFixed(1)}%, Draw=${drawProbability.toFixed(1)}%, Away=${awayWinProbability.toFixed(1)}%`);
-    console.log(`  Predicted Score: ${predictedHomeGoals}-${predictedAwayGoals}`);
-    console.log(`  Margin: ${margin.toFixed(1)}%`);
-    console.log(`  Confidence: ${confidence}%`);
+    // Significantly reduce confidence after winter break
+    if (afterWinterBreak) {
+      // Reduce confidence by 20-30% depending on break length
+      const confidenceReduction = Math.min(30, 15 + (winterBreakMonths * 5));
+      confidence -= confidenceReduction;
+    }
+    
+    // Cap between 35% and 95% (lower minimum after winter break)
+    const minConfidence = afterWinterBreak ? 35 : 50;
+    confidence = Math.min(Math.max(Math.round(confidence), minConfidence), 95);
 
     return {
       matchId,

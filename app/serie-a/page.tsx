@@ -4,14 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { serieAPredictions } from '@/lib/serie-a-predictions';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info, Download } from 'lucide-react';
 import Link from 'next/link';
+import { exportLeaguePredictionsToPDF } from '@/lib/utils/league-pdf-helper';
+import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export default function SerieAPage() {
   const predictions = serieAPredictions.map(({ match, prediction }) => ({
     match: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
     prediction
   }));
+
+  const handleExportAllPDF = () => {
+    exportLeaguePredictionsToPDF(predictions, 'Serie A', 'Kampdag 24');
+  };
 
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
@@ -60,8 +66,20 @@ export default function SerieAPage() {
               <Calendar className="h-5 w-5" />
               <span>Kampdag 24 af 38</span>
             </div>
+            <div className="mt-4">
+              <Button 
+                onClick={handleExportAllPDF}
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Eksporter Alle til PDF
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* AI Disclaimer */}
+        <AIDisclaimer />
 
         {/* Match Predictions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

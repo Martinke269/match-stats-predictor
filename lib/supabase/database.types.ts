@@ -88,6 +88,10 @@ export interface Database {
           confidence: number
           factors: Json
           created_at: string
+          actual_home_score: number | null
+          actual_away_score: number | null
+          was_correct: boolean | null
+          result_type: 'exact_score' | 'correct_outcome' | 'incorrect' | null
         }
         Insert: {
           id?: string
@@ -100,6 +104,10 @@ export interface Database {
           confidence: number
           factors?: Json
           created_at?: string
+          actual_home_score?: number | null
+          actual_away_score?: number | null
+          was_correct?: boolean | null
+          result_type?: 'exact_score' | 'correct_outcome' | 'incorrect' | null
         }
         Update: {
           id?: string
@@ -112,6 +120,10 @@ export interface Database {
           confidence?: number
           factors?: Json
           created_at?: string
+          actual_home_score?: number | null
+          actual_away_score?: number | null
+          was_correct?: boolean | null
+          result_type?: 'exact_score' | 'correct_outcome' | 'incorrect' | null
         }
       }
     }

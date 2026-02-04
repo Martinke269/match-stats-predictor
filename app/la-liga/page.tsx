@@ -4,11 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generateLaLigaPredictions } from '@/lib/la-liga-predictions';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info, Download } from 'lucide-react';
 import Link from 'next/link';
+import { exportLeaguePredictionsToPDF } from '@/lib/utils/league-pdf-helper';
+import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export default function LaLigaPage() {
   const predictions = generateLaLigaPredictions();
+
+  const handleExportAllPDF = () => {
+    exportLeaguePredictionsToPDF(predictions, 'La Liga', 'Kampdag 23');
+  };
 
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
@@ -58,8 +64,20 @@ export default function LaLigaPage() {
               <Calendar className="h-5 w-5" />
               <span>Kampdag 23 af 38</span>
             </div>
+            <div className="mt-4">
+              <Button 
+                onClick={handleExportAllPDF}
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Eksporter Alle til PDF
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* AI Disclaimer */}
+        <AIDisclaimer />
 
         {/* Match Predictions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

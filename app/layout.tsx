@@ -1,4 +1,3 @@
-"use client";
 import type * as React from "react";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";

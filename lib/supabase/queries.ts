@@ -267,3 +267,152 @@ export async function insertMatch(
   
   return data.id;
 }
+
+// Get all predictions with match data (for history page)
+export async function getPredictionsWithMatches(limit: number = 50): Promise<Array<{
+  prediction: PredictionRow;
+  match: Match;
+}>> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('predictions')
+    .select(`
+      *,
+      match:matches!predictions_match_id_fkey(
+        *,
+        home_team:teams!matches_home_team_id_fkey(*),
+        away_team:teams!matches_away_team_id_fkey(*)
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (error) {
+    console.error('Error fetching predictions with matches:', error);
+    return [];
+  }
+  
+  const results: Array<{ prediction: PredictionRow; match: Match }> = [];
+  
+  for (const item of data) {
+    if (item.match && item.match.home_team && item.match.away_team) {
+      const match = await rowToMatch(
+        item.match as MatchRow,
+        item.match.home_team as TeamRow,
+        item.match.away_team as TeamRow
+      );
+      
+      results.push({
+        prediction: item as PredictionRow,
+        match
+      });
+    }
+  }
+  
+  return results;
+}
+
+// Update prediction with actual results
+export async function updatePredictionResult(
+  predictionId: string,
+  actualHomeScore: number,
+  actualAwayScore: number
+): Promise<boolean> {
+  const supabase = createClient();
+  
+  // Get the prediction to compare
+  const { data: prediction, error: fetchError } = await supabase
+    .from('predictions')
+    .select('*')
+    .eq('id', predictionId)
+    .single();
+  
+  if (fetchError || !prediction) {
+    console.error('Error fetching prediction:', fetchError);
+    return false;
+  }
+  
+  // Determine if prediction was correct
+  const predictedHomeScore = prediction.predicted_home_score;
+  const predictedAwayScore = prediction.predicted_away_score;
+  
+  let wasCorrect = false;
+  let resultType: 'exact_score' | 'correct_outcome' | 'incorrect';
+  
+  // Check for exact score match
+  if (predictedHomeScore === actualHomeScore && predictedAwayScore === actualAwayScore) {
+    wasCorrect = true;
+    resultType = 'exact_score';
+  } else {
+    // Check for correct outcome (win/draw/loss)
+    const predictedOutcome = 
+      predictedHomeScore > predictedAwayScore ? 'home' :
+      predictedHomeScore < predictedAwayScore ? 'away' : 'draw';
+    
+    const actualOutcome = 
+      actualHomeScore > actualAwayScore ? 'home' :
+      actualHomeScore < actualAwayScore ? 'away' : 'draw';
+    
+    if (predictedOutcome === actualOutcome) {
+      wasCorrect = true;
+      resultType = 'correct_outcome';
+    } else {
+      wasCorrect = false;
+      resultType = 'incorrect';
+    }
+  }
+  
+  // Update the prediction
+  const { error: updateError } = await supabase
+    .from('predictions')
+    .update({
+      actual_home_score: actualHomeScore,
+      actual_away_score: actualAwayScore,
+      was_correct: wasCorrect,
+      result_type: resultType
+    })
+    .eq('id', predictionId);
+  
+  if (updateError) {
+    console.error('Error updating prediction result:', updateError);
+    return false;
+  }
+  
+  return true;
+}
+
+// Get prediction accuracy stats
+export async function getPredictionStats(): Promise<{
+  total: number;
+  exactScore: number;
+  correctOutcome: number;
+  incorrect: number;
+  accuracy: number;
+}> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('predictions')
+    .select('result_type')
+    .not('result_type', 'is', null);
+  
+  if (error) {
+    console.error('Error fetching prediction stats:', error);
+    return { total: 0, exactScore: 0, correctOutcome: 0, incorrect: 0, accuracy: 0 };
+  }
+  
+  const total = data.length;
+  const exactScore = data.filter(p => p.result_type === 'exact_score').length;
+  const correctOutcome = data.filter(p => p.result_type === 'correct_outcome').length;
+  const incorrect = data.filter(p => p.result_type === 'incorrect').length;
+  const accuracy = total > 0 ? ((exactScore + correctOutcome) / total) * 100 : 0;
+  
+  return {
+    total,
+    exactScore,
+    correctOutcome,
+    incorrect,
+    accuracy: Math.round(accuracy * 10) / 10
+  };
+}

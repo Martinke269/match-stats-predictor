@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
@@ -13,36 +15,36 @@ export function FooterInfo() {
             sejrsrater og hjemmebanefordel.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-4xl mx-auto mt-4">
-            <Link href="/superliga">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/superliga">
                 Superliga
-              </Button>
-            </Link>
-            <Link href="/ligue1">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/ligue1">
                 Ligue 1
-              </Button>
-            </Link>
-            <Link href="/premier-league">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/premier-league">
                 Premier League
-              </Button>
-            </Link>
-            <Link href="/serie-a">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/serie-a">
                 Serie A
-              </Button>
-            </Link>
-            <Link href="/la-liga">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/la-liga">
                 La Liga
-              </Button>
-            </Link>
-            <Link href="/bundesliga">
-              <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50">
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/bundesliga">
                 Bundesliga
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </CardContent>

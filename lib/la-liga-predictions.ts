@@ -75,7 +75,6 @@ export function generateLaLigaPredictions(): {
     const awayTeam = laLigaTeams[match.away];
     
     if (!homeTeam || !awayTeam) {
-      console.error(`Missing team data: home=${match.home} (${!!homeTeam}), away=${match.away} (${!!awayTeam})`);
       throw new Error(`Missing team data for ${match.matchName}`);
     }
     

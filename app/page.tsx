@@ -1,5 +1,3 @@
-'use client';
-
 import { generateSuperligaPredictions } from '@/lib/superliga-predictions';
 import { generateLigue1Predictions } from '@/lib/ligue1-predictions';
 import { generatePremierLeaguePredictions } from '@/lib/premier-league-predictions';
@@ -7,6 +5,7 @@ import { serieAPredictions } from '@/lib/serie-a-predictions';
 import { generateBundesligaPredictions } from '@/lib/bundesliga-predictions';
 import { generateLaLigaPredictions } from '@/lib/la-liga-predictions';
 import { Trophy } from 'lucide-react';
+import Link from 'next/link';
 import { HeroSection } from '@/components/home/hero-section';
 import { LeagueMatchesSection } from '@/components/home/league-matches-section';
 import { FooterInfo } from '@/components/home/footer-info';
@@ -23,25 +22,30 @@ export default function HomePage() {
   const allBundesligaPredictions = generateBundesligaPredictions();
   const allLaLigaPredictions = generateLaLigaPredictions();
   
-  // Filter to only show predictions with 90%+ confidence
-  const highConfidenceSuperliga = allSuperligaPredictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
-  const highConfidenceLigue1 = allLigue1Predictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
-  const highConfidencePremierLeague = allPremierLeaguePredictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
-  const highConfidenceSerieA = allSerieAPredictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
-  const highConfidenceBundesliga = allBundesligaPredictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
-  const highConfidenceLaLiga = allLaLigaPredictions.filter(
-    ({ prediction }) => prediction.confidence >= 90
-  );
+  // Get top 3 matches from each league sorted by highest confidence score
+  const topSuperliga = [...allSuperligaPredictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
+  
+  const topLigue1 = [...allLigue1Predictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
+  
+  const topPremierLeague = [...allPremierLeaguePredictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
+  
+  const topSerieA = [...allSerieAPredictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
+  
+  const topBundesliga = [...allBundesligaPredictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
+  
+  const topLaLiga = [...allLaLigaPredictions]
+    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
+    .slice(0, 3);
 
   // Match schedules
   const superligaSchedule = [
@@ -110,13 +114,33 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8">
         <HeroSection />
         
+        {/* Power Rankings Link */}
+        <div className="mb-8">
+          <Link href="/power-rankings">
+            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 rounded-lg p-6 hover:scale-[1.02] transition-all cursor-pointer backdrop-blur-sm">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <Trophy className="h-12 w-12 text-yellow-400" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-1">Power Rankings</h2>
+                    <p className="text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i hver liga</p>
+                  </div>
+                </div>
+                <div className="bg-yellow-500 text-slate-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors">
+                  Se Rankings →
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+        
         <FooterInfo />
 
-        {/* Superligaen - High Confidence Matches */}
+        {/* Superligaen - Top 3 Matches */}
         <LeagueMatchesSection
           leagueName="Superligaen"
           leagueIcon={<Trophy className="h-8 w-8 text-yellow-400" />}
-          predictions={highConfidenceSuperliga}
+          predictions={topSuperliga}
           matchSchedule={superligaSchedule}
           leagueLink="/superliga"
           badgeColor="bg-green-500"
@@ -124,23 +148,11 @@ export default function HomePage() {
           timeColor="text-blue-300"
         />
 
-        {/* Ligue 1 - High Confidence Matches */}
-        <LeagueMatchesSection
-          leagueName="Ligue 1"
-          leagueIcon={<Trophy className="h-8 w-8 text-purple-400" />}
-          predictions={highConfidenceLigue1}
-          matchSchedule={ligue1Schedule}
-          leagueLink="/ligue1"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-purple-500"
-          timeColor="text-purple-300"
-        />
-
-        {/* Premier League - High Confidence Matches */}
+        {/* Premier League - Top 3 Matches */}
         <LeagueMatchesSection
           leagueName="Premier League"
           leagueIcon={<Trophy className="h-8 w-8 text-pink-400" />}
-          predictions={highConfidencePremierLeague}
+          predictions={topPremierLeague}
           matchSchedule={premierLeagueSchedule}
           leagueLink="/premier-league"
           badgeColor="bg-green-500"
@@ -148,11 +160,11 @@ export default function HomePage() {
           timeColor="text-pink-300"
         />
 
-        {/* Serie A - High Confidence Matches */}
+        {/* Serie A - Top 3 Matches */}
         <LeagueMatchesSection
           leagueName="Serie A"
           leagueIcon={<Trophy className="h-8 w-8 text-blue-400" />}
-          predictions={highConfidenceSerieA}
+          predictions={topSerieA}
           matchSchedule={serieASchedule}
           leagueLink="/serie-a"
           badgeColor="bg-green-500"
@@ -160,11 +172,23 @@ export default function HomePage() {
           timeColor="text-blue-300"
         />
 
-        {/* Bundesliga - High Confidence Matches */}
+        {/* La Liga - Top 3 Matches */}
+        <LeagueMatchesSection
+          leagueName="La Liga"
+          leagueIcon={<Trophy className="h-8 w-8 text-orange-400" />}
+          predictions={topLaLiga}
+          matchSchedule={laLigaSchedule}
+          leagueLink="/la-liga"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-orange-500"
+          timeColor="text-orange-300"
+        />
+
+        {/* Bundesliga - Top 3 Matches */}
         <LeagueMatchesSection
           leagueName="Bundesliga"
           leagueIcon={<Trophy className="h-8 w-8 text-red-400" />}
-          predictions={highConfidenceBundesliga}
+          predictions={topBundesliga}
           matchSchedule={bundesligaSchedule}
           leagueLink="/bundesliga"
           badgeColor="bg-green-500"
@@ -172,16 +196,16 @@ export default function HomePage() {
           timeColor="text-red-300"
         />
 
-        {/* La Liga - High Confidence Matches */}
+        {/* Ligue 1 - Top 3 Matches */}
         <LeagueMatchesSection
-          leagueName="La Liga"
-          leagueIcon={<Trophy className="h-8 w-8 text-orange-400" />}
-          predictions={highConfidenceLaLiga}
-          matchSchedule={laLigaSchedule}
-          leagueLink="/la-liga"
+          leagueName="Ligue 1"
+          leagueIcon={<Trophy className="h-8 w-8 text-purple-400" />}
+          predictions={topLigue1}
+          matchSchedule={ligue1Schedule}
+          leagueLink="/ligue1"
           badgeColor="bg-green-500"
-          borderColor="hover:border-orange-500"
-          timeColor="text-orange-300"
+          borderColor="hover:border-purple-500"
+          timeColor="text-purple-300"
         />
       </div>
     </div>

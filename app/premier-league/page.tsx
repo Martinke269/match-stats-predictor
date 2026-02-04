@@ -4,11 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generatePremierLeaguePredictions } from '@/lib/premier-league-predictions';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info, Download } from 'lucide-react';
 import Link from 'next/link';
+import { exportLeaguePredictionsToPDF } from '@/lib/utils/league-pdf-helper';
+import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export default function PremierLeaguePage() {
   const predictions = generatePremierLeaguePredictions();
+
+  const handleExportAllPDF = () => {
+    exportLeaguePredictionsToPDF(predictions, 'Premier League', 'Kampdag 25');
+  };
 
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
@@ -58,8 +64,20 @@ export default function PremierLeaguePage() {
               <Calendar className="h-5 w-5" />
               <span>Kampdag 25 af 38</span>
             </div>
+            <div className="mt-4">
+              <Button 
+                onClick={handleExportAllPDF}
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Eksporter Alle til PDF
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* AI Disclaimer */}
+        <AIDisclaimer />
 
         {/* Match Predictions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
