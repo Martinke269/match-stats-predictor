@@ -12,37 +12,54 @@ export function generateSuperligaPredictions(): {
       id: 'agf-ob',
       home: 'agf',
       away: 'ob',
-      matchName: 'AGF vs OB'
+      matchName: 'AGF vs OB',
+      homeFixtureCongestion: undefined,
+      awayFixtureCongestion: undefined
+      // Ingen fixture congestion - pokalkampene er næste uge
     },
     {
       id: 'fcn-sje',
       home: 'fc nordsjælland',
       away: 'sønderjyske fodbold',
-      matchName: 'FC Nordsjælland vs SønderjyskE'
+      matchName: 'FC Nordsjælland vs SønderjyskE',
+      homeFixtureCongestion: undefined,
+      awayFixtureCongestion: undefined
     },
     {
       id: 'sif-vff',
       home: 'silkeborg if',
       away: 'viborg ff',
-      matchName: 'Silkeborg IF vs Viborg FF'
+      matchName: 'Silkeborg IF vs Viborg FF',
+      homeFixtureCongestion: undefined,
+      awayFixtureCongestion: undefined
+      // Ingen fixture congestion - pokalkampen er næste uge
     },
     {
       id: 'fcm-fck',
       home: 'fc midtjylland',
       away: 'fc københavn',
-      matchName: 'FC Midtjylland vs FC København'
+      matchName: 'FC Midtjylland vs FC København',
+      homeFixtureCongestion: {
+        europeanCompetition: true // FCM spiller stadig i Europa League - løbende belastning
+      },
+      awayFixtureCongestion: undefined
+      // Pokalkampene er næste uge, så de påvirker ikke denne kamp direkte
     },
     {
       id: 'bif-rfc',
       home: 'brøndby if',
       away: 'randers fc',
-      matchName: 'Brøndby IF vs Randers FC'
+      matchName: 'Brøndby IF vs Randers FC',
+      homeFixtureCongestion: undefined,
+      awayFixtureCongestion: undefined
     },
     {
       id: 'vbk-fcf',
       home: 'vejle boldklub',
       away: 'fc fredericia',
-      matchName: 'Vejle BK vs FC Fredericia'
+      matchName: 'Vejle BK vs FC Fredericia',
+      homeFixtureCongestion: undefined,
+      awayFixtureCongestion: undefined
     }
   ];
 
@@ -54,7 +71,9 @@ export function generateSuperligaPredictions(): {
     // Current date is in February, so we're right after the winter break
     const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id, {
       afterWinterBreak: true,
-      winterBreakMonths: 2 // Approximately 2 months break
+      winterBreakMonths: 2, // Approximately 2 months break
+      homeFixtureCongestion: match.homeFixtureCongestion,
+      awayFixtureCongestion: match.awayFixtureCongestion
     });
     
     return {

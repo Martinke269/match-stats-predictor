@@ -15,11 +15,21 @@ export class PredictionEngine {
     options?: {
       afterWinterBreak?: boolean;
       winterBreakMonths?: number; // How many months since last match
+      homeFixtureCongestion?: {
+        europeanCompetition?: boolean; // Playing in European competition
+        cupMatches?: number; // Number of cup matches this month
+      };
+      awayFixtureCongestion?: {
+        europeanCompetition?: boolean;
+        cupMatches?: number;
+      };
     }
   ): Prediction {
     const factors: PredictionFactor[] = [];
     const afterWinterBreak = options?.afterWinterBreak || false;
     const winterBreakMonths = options?.winterBreakMonths || 2;
+    const homeFixtureCongestion = options?.homeFixtureCongestion;
+    const awayFixtureCongestion = options?.awayFixtureCongestion;
     
     // Winter break warning - form is less reliable
     if (afterWinterBreak) {
@@ -29,6 +39,52 @@ export class PredictionEngine {
         weight: 0.25,
         description: `⚠️ ${winterBreakMonths} måneders vinterpause - alle hold starter fra 0. Resultater er meget usikre!`
       });
+    }
+    
+    // Fixture congestion analysis
+    let homeFixtureLoad = 0;
+    let awayFixtureLoad = 0;
+    
+    if (homeFixtureCongestion) {
+      if (homeFixtureCongestion.europeanCompetition) {
+        homeFixtureLoad += 2; // European matches are very demanding
+        factors.push({
+          name: 'Europæisk fodbold',
+          impact: 'negative',
+          weight: 0.2,
+          description: `${homeTeam.name} spiller i Europa League - risiko for træthed og rotation`
+        });
+      }
+      if (homeFixtureCongestion.cupMatches && homeFixtureCongestion.cupMatches > 0) {
+        homeFixtureLoad += homeFixtureCongestion.cupMatches;
+        factors.push({
+          name: 'Pokalkampe',
+          impact: 'negative',
+          weight: 0.15,
+          description: `${homeTeam.name} har ${homeFixtureCongestion.cupMatches} pokalkamp${homeFixtureCongestion.cupMatches > 1 ? 'e' : ''} denne måned`
+        });
+      }
+    }
+    
+    if (awayFixtureCongestion) {
+      if (awayFixtureCongestion.europeanCompetition) {
+        awayFixtureLoad += 2;
+        factors.push({
+          name: 'Europæisk fodbold',
+          impact: 'positive', // Positive for home team
+          weight: 0.2,
+          description: `${awayTeam.name} spiller i Europa League - risiko for træthed og rotation`
+        });
+      }
+      if (awayFixtureCongestion.cupMatches && awayFixtureCongestion.cupMatches > 0) {
+        awayFixtureLoad += awayFixtureCongestion.cupMatches;
+        factors.push({
+          name: 'Pokalkampe',
+          impact: 'positive', // Positive for home team
+          weight: 0.15,
+          description: `${awayTeam.name} har ${awayFixtureCongestion.cupMatches} pokalkamp${awayFixtureCongestion.cupMatches > 1 ? 'e' : ''} denne måned`
+        });
+      }
     }
     
     // Calculate form score (recent results) - but reduce weight after winter break
@@ -111,6 +167,10 @@ export class PredictionEngine {
     
     // After winter break, reduce the impact of all factors
     const impactMultiplier = afterWinterBreak ? 0.5 : 1.0;
+    
+    // Fixture congestion impact - reduces team's effective strength
+    const fixtureLoadDifference = awayFixtureLoad - homeFixtureLoad;
+    homeScore += fixtureLoadDifference * 5; // Each fixture load point is worth 5 points
     
     // Form impact (max ±15, reduced after winter break)
     homeScore += (homeFormScore - awayFormScore) * 3 * impactMultiplier;

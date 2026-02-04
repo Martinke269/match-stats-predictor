@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { generateSuperligaPredictions } from '@/lib/superliga-predictions';
 import { generateLigue1Predictions } from '@/lib/ligue1-predictions';
 import { generatePremierLeaguePredictions } from '@/lib/premier-league-predictions';
@@ -9,8 +12,19 @@ import Link from 'next/link';
 import { HeroSection } from '@/components/home/hero-section';
 import { LeagueMatchesSection } from '@/components/home/league-matches-section';
 import { FooterInfo } from '@/components/home/footer-info';
+import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   // Get all predictions from all leagues
   const allSuperligaPredictions = generateSuperligaPredictions();
   const allLigue1Predictions = generateLigue1Predictions();
@@ -114,19 +128,21 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8">
         <HeroSection />
         
+        <AIDisclaimer />
+        
         {/* Power Rankings Link */}
-        <div className="mb-8">
+        <div className="mb-8 px-4">
           <Link href="/power-rankings">
-            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 rounded-lg p-6 hover:scale-[1.02] transition-all cursor-pointer backdrop-blur-sm">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <Trophy className="h-12 w-12 text-yellow-400" />
+            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 rounded-lg p-4 sm:p-6 hover:scale-[1.02] transition-all cursor-pointer backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400 flex-shrink-0" />
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">Power Rankings</h2>
-                    <p className="text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i hver liga</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Power Rankings</h2>
+                    <p className="text-sm sm:text-base text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i hver liga</p>
                   </div>
                 </div>
-                <div className="bg-yellow-500 text-slate-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors">
+                <div className="bg-yellow-500 text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
                   Se Rankings →
                 </div>
               </div>

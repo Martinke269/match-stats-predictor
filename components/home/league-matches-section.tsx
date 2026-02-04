@@ -69,12 +69,12 @@ export function LeagueMatchesSection({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-white flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3 px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
           {leagueIcon}
           {leagueName}
         </h2>
-        <Badge className={`${badgeColor} text-white text-lg px-4 py-2`}>
+        <Badge className={`${badgeColor} text-white text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-2`}>
           {predictions.length} kampe
         </Badge>
       </div>
@@ -94,63 +94,63 @@ export function LeagueMatchesSection({
                       {schedule?.day} {schedule?.time}
                     </Badge>
                   </div>
-                  <CardTitle className="text-white text-lg">
-                    <div className="flex items-center justify-between">
-                      <span>{homeTeam}</span>
+                  <CardTitle className="text-white text-base sm:text-lg">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate flex-1 text-left">{homeTeam}</span>
                       {getResultIcon(prediction.homeWinProbability, prediction.awayWinProbability)}
-                      <span>{awayTeam}</span>
+                      <span className="truncate flex-1 text-right">{awayTeam}</span>
                     </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {/* Predicted Score */}
                   <div className="text-center mb-4">
-                    <div className="text-4xl font-bold text-white">
+                    <div className="text-3xl sm:text-4xl font-bold text-white">
                       {prediction.predictedScore.home} - {prediction.predictedScore.away}
                     </div>
-                    <div className="text-sm text-slate-400 mt-1">Forudsagt resultat</div>
+                    <div className="text-xs sm:text-sm text-slate-400 mt-1">Forudsagt resultat</div>
                   </div>
 
                   {/* Probabilities */}
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-300">Hjemmesejr</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-slate-700 rounded-full h-2">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Hjemmesejr</span>
+                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
+                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full transition-all"
                             style={{ width: `${prediction.homeWinProbability}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold text-white w-12 text-right">
+                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
                           {prediction.homeWinProbability}%
                         </span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-300">Uafgjort</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-slate-700 rounded-full h-2">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Uafgjort</span>
+                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
+                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
                           <div 
                             className="bg-yellow-500 h-2 rounded-full transition-all"
                             style={{ width: `${prediction.drawProbability}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold text-white w-12 text-right">
+                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
                           {prediction.drawProbability}%
                         </span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-300">Udesejr</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 bg-slate-700 rounded-full h-2">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-xs sm:text-sm text-slate-300 flex-shrink-0">Udesejr</span>
+                      <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end">
+                        <div className="w-16 sm:w-24 bg-slate-700 rounded-full h-2">
                           <div 
                             className="bg-red-500 h-2 rounded-full transition-all"
                             style={{ width: `${prediction.awayWinProbability}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold text-white w-12 text-right">
+                        <span className="text-xs sm:text-sm font-semibold text-white w-10 sm:w-12 text-right">
                           {prediction.awayWinProbability}%
                         </span>
                       </div>

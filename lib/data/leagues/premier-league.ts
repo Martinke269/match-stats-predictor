@@ -290,22 +290,6 @@ export const premierLeagueTeams: Record<string, Team> = {
       passAccuracy: 69
     }
   },
-  'leicester': {
-    id: 'lei',
-    name: 'Leicester',
-    form: ['L', 'L', 'D', 'L', 'W'],
-    stats: {
-      goalsScored: 22,
-      goalsConceded: 50,
-      wins: 4,
-      draws: 6,
-      losses: 11,
-      cleanSheets: 1,
-      possession: 41,
-      shotsOnTarget: 62,
-      passAccuracy: 68
-    }
-  },
   'southampton': {
     id: 'sou',
     name: 'Southampton',
@@ -320,6 +304,54 @@ export const premierLeagueTeams: Record<string, Team> = {
       possession: 40,
       shotsOnTarget: 58,
       passAccuracy: 67
+    }
+  },
+  'leeds': {
+    id: 'lee',
+    name: 'Leeds',
+    form: ['W', 'D', 'L', 'W', 'D'],
+    stats: {
+      goalsScored: 35,
+      goalsConceded: 42,
+      wins: 7,
+      draws: 8,
+      losses: 6,
+      cleanSheets: 3,
+      possession: 48,
+      shotsOnTarget: 85,
+      passAccuracy: 74
+    }
+  },
+  'burnley': {
+    id: 'bur',
+    name: 'Burnley',
+    form: ['L', 'D', 'L', 'D', 'L'],
+    stats: {
+      goalsScored: 25,
+      goalsConceded: 47,
+      wins: 5,
+      draws: 7,
+      losses: 9,
+      cleanSheets: 2,
+      possession: 43,
+      shotsOnTarget: 70,
+      passAccuracy: 71
+    }
+  },
+  'sunderland': {
+    id: 'sun',
+    name: 'Sunderland',
+    form: ['L', 'L', 'D', 'L', 'L'],
+    stats: {
+      goalsScored: 23,
+      goalsConceded: 49,
+      wins: 4,
+      draws: 7,
+      losses: 10,
+      cleanSheets: 2,
+      possession: 42,
+      shotsOnTarget: 66,
+      passAccuracy: 69
     }
   }
 };
