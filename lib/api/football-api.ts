@@ -175,6 +175,139 @@ export async function fetchAllLeaguesFixtures(): Promise<Match[]> {
 }
 
 /**
+ * Head-to-head match result
+ */
+export interface HeadToHeadMatch {
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeGoals: number;
+  awayGoals: number;
+  winner: 'home' | 'away' | 'draw';
+}
+
+/**
+ * Head-to-head statistics between two teams
+ */
+export interface HeadToHeadStats {
+  totalMatches: number;
+  homeTeamWins: number;
+  awayTeamWins: number;
+  draws: number;
+  homeTeamGoals: number;
+  awayTeamGoals: number;
+  lastMatches: HeadToHeadMatch[];
+  isDerby: boolean; // True if teams are from same city/region
+}
+
+/**
+ * Fetch head-to-head statistics between two teams
+ * @param homeTeamId - Home team ID
+ * @param awayTeamId - Away team ID
+ * @param limit - Number of recent matches to include (default: 10)
+ */
+export async function fetchHeadToHead(
+  homeTeamId: string,
+  awayTeamId: string,
+  limit: number = 10
+): Promise<HeadToHeadStats | null> {
+  if (!API_KEY) {
+    console.warn('No API key provided for head-to-head data');
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/fixtures/headtohead?h2h=${homeTeamId}-${awayTeamId}&last=${limit}`,
+      {
+        headers: {
+          'x-apisports-key': API_KEY
+        },
+        next: { revalidate: 86400 } // Cache for 24 hours
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const fixtures: APIFixture[] = data.response || [];
+
+    if (fixtures.length === 0) {
+      return null;
+    }
+
+    // Process matches
+    const lastMatches: HeadToHeadMatch[] = [];
+    let homeTeamWins = 0;
+    let awayTeamWins = 0;
+    let draws = 0;
+    let homeTeamGoals = 0;
+    let awayTeamGoals = 0;
+
+    fixtures.forEach(fixture => {
+      const homeGoals = fixture.goals.home || 0;
+      const awayGoals = fixture.goals.away || 0;
+      
+      // Determine which team was home in this match
+      const wasHomeTeamHome = fixture.teams.home.id.toString() === homeTeamId;
+      
+      let winner: 'home' | 'away' | 'draw';
+      if (homeGoals > awayGoals) {
+        winner = 'home';
+        if (wasHomeTeamHome) homeTeamWins++;
+        else awayTeamWins++;
+      } else if (awayGoals > homeGoals) {
+        winner = 'away';
+        if (wasHomeTeamHome) awayTeamWins++;
+        else homeTeamWins++;
+      } else {
+        winner = 'draw';
+        draws++;
+      }
+
+      // Accumulate goals (from perspective of current home/away teams)
+      if (wasHomeTeamHome) {
+        homeTeamGoals += homeGoals;
+        awayTeamGoals += awayGoals;
+      } else {
+        homeTeamGoals += awayGoals;
+        awayTeamGoals += homeGoals;
+      }
+
+      lastMatches.push({
+        date: fixture.fixture.date,
+        homeTeam: fixture.teams.home.name,
+        awayTeam: fixture.teams.away.name,
+        homeGoals,
+        awayGoals,
+        winner
+      });
+    });
+
+    // Check if it's a derby (teams from same country/region)
+    // This is a simplified check - could be enhanced with city data
+    const isDerby = fixtures.length > 0 && 
+                    fixtures[0].league.country === fixtures[0].league.country;
+
+    return {
+      totalMatches: fixtures.length,
+      homeTeamWins,
+      awayTeamWins,
+      draws,
+      homeTeamGoals,
+      awayTeamGoals,
+      lastMatches: lastMatches.slice(0, 5), // Return last 5 matches
+      isDerby
+    };
+  } catch (error) {
+    console.error('Error fetching head-to-head data:', error);
+    return null;
+  }
+}
+
+/**
  * Check if API is configured
  */
 export function isAPIConfigured(): boolean {

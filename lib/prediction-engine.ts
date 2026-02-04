@@ -1,4 +1,5 @@
 import { Team, Prediction, PredictionFactor } from './types';
+import { HeadToHeadStats } from './api/football-api';
 
 export class PredictionEngine {
   /**
@@ -6,7 +7,7 @@ export class PredictionEngine {
    * @param homeTeam - Home team data
    * @param awayTeam - Away team data
    * @param matchId - Unique match identifier
-   * @param options - Optional configuration including winter break detection
+   * @param options - Optional configuration including winter break detection and head-to-head data
    */
   static predictMatch(
     homeTeam: Team, 
@@ -25,6 +26,7 @@ export class PredictionEngine {
       };
       enableUpsetFactor?: boolean; // Enable surprise factor for underdogs
       upsetFactorStrength?: number; // 0-1, how strong the upset factor should be (default 0.3)
+      headToHead?: HeadToHeadStats | null; // Head-to-head statistics between teams
     }
   ): Prediction {
     const factors: PredictionFactor[] = [];
@@ -34,6 +36,7 @@ export class PredictionEngine {
     const awayFixtureCongestion = options?.awayFixtureCongestion;
     const enableUpsetFactor = options?.enableUpsetFactor !== false; // Default to true
     const upsetFactorStrength = options?.upsetFactorStrength || 0.3;
+    const headToHead = options?.headToHead;
     
     // Winter break warning - form is less reliable
     if (afterWinterBreak) {
@@ -130,6 +133,79 @@ export class PredictionEngine {
         weight: 0.15,
         description: `${awayTeam.name} har bedre målforskel (+${awayGoalDiff})`
       });
+    }
+
+    // HEAD-TO-HEAD ANALYSIS
+    let h2hBonus = 0;
+    if (headToHead && headToHead.totalMatches >= 3) {
+      const h2hWinRate = headToHead.homeTeamWins / headToHead.totalMatches;
+      const h2hAwayWinRate = headToHead.awayTeamWins / headToHead.totalMatches;
+      
+      // Strong head-to-head record (60%+ win rate)
+      if (h2hWinRate >= 0.6) {
+        h2hBonus = 10;
+        factors.push({
+          name: 'Indbyrdes kampe',
+          impact: 'positive',
+          weight: 0.2,
+          description: `${homeTeam.name} har vundet ${headToHead.homeTeamWins} af ${headToHead.totalMatches} seneste indbyrdes kampe (${Math.round(h2hWinRate * 100)}%)`
+        });
+      } else if (h2hAwayWinRate >= 0.6) {
+        h2hBonus = -10;
+        factors.push({
+          name: 'Indbyrdes kampe',
+          impact: 'negative',
+          weight: 0.2,
+          description: `${awayTeam.name} har vundet ${headToHead.awayTeamWins} af ${headToHead.totalMatches} seneste indbyrdes kampe (${Math.round(h2hAwayWinRate * 100)}%)`
+        });
+      } else if (Math.abs(h2hWinRate - h2hAwayWinRate) >= 0.3) {
+        // Moderate advantage
+        if (h2hWinRate > h2hAwayWinRate) {
+          h2hBonus = 5;
+          factors.push({
+            name: 'Indbyrdes kampe',
+            impact: 'positive',
+            weight: 0.15,
+            description: `${homeTeam.name} har fordel i indbyrdes opgør (${headToHead.homeTeamWins}-${headToHead.draws}-${headToHead.awayTeamWins})`
+          });
+        } else {
+          h2hBonus = -5;
+          factors.push({
+            name: 'Indbyrdes kampe',
+            impact: 'negative',
+            weight: 0.15,
+            description: `${awayTeam.name} har fordel i indbyrdes opgør (${headToHead.awayTeamWins}-${headToHead.draws}-${headToHead.homeTeamWins})`
+          });
+        }
+      }
+      
+      // Derby factor - increases unpredictability
+      if (headToHead.isDerby) {
+        factors.push({
+          name: 'Derby/Lokalopgør',
+          impact: 'neutral',
+          weight: 0.15,
+          description: `⚡ Lokalderby - historik og rivalitet kan ændre alt! Forventede resultater gælder ofte ikke`
+        });
+      }
+      
+      // Recent form in head-to-head (last 3 matches)
+      if (headToHead.lastMatches.length >= 3) {
+        const recentH2H = headToHead.lastMatches.slice(0, 3);
+        const recentHomeWins = recentH2H.filter(m => 
+          (m.homeTeam === homeTeam.name && m.winner === 'home') ||
+          (m.awayTeam === homeTeam.name && m.winner === 'away')
+        ).length;
+        
+        if (recentHomeWins >= 2) {
+          factors.push({
+            name: 'Seneste indbyrdes form',
+            impact: 'positive',
+            weight: 0.1,
+            description: `${homeTeam.name} har vundet ${recentHomeWins} af de seneste 3 indbyrdes kampe`
+          });
+        }
+      }
     }
 
     // Home advantage
@@ -239,6 +315,15 @@ export class PredictionEngine {
     // Fixture congestion impact - reduces team's effective strength
     const fixtureLoadDifference = awayFixtureLoad - homeFixtureLoad;
     homeScore += fixtureLoadDifference * 5; // Each fixture load point is worth 5 points
+    
+    // Head-to-head impact
+    homeScore += h2hBonus * impactMultiplier;
+    
+    // Derby factor - reduce confidence in prediction (more unpredictable)
+    if (headToHead?.isDerby) {
+      // Pull score slightly towards 50 (more balanced)
+      homeScore = 50 + (homeScore - 50) * 0.85;
+    }
     
     // Form impact (max ±15, reduced after winter break)
     homeScore += (homeFormScore - awayFormScore) * 3 * impactMultiplier;
