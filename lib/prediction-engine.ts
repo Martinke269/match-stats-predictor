@@ -162,11 +162,19 @@ export class PredictionEngine {
       });
     }
 
+    // Calculate team quality first (needed for probability calculation)
+    const homeQuality = this.calculateTeamQuality(homeTeam);
+    const awayQuality = this.calculateTeamQuality(awayTeam);
+    const qualityGap = Math.abs(homeQuality - awayQuality);
+    
     // Calculate probabilities
     let homeScore = 50; // Base score
     
     // After winter break, reduce the impact of all factors
     const impactMultiplier = afterWinterBreak ? 0.5 : 1.0;
+    
+    // NEW: Team quality impact on probability (max ±20 points)
+    homeScore += ((homeQuality - awayQuality) / 5) * impactMultiplier;
     
     // Fixture congestion impact - reduces team's effective strength
     const fixtureLoadDifference = awayFixtureLoad - homeFixtureLoad;
@@ -287,6 +295,43 @@ export class PredictionEngine {
       confidence += 5;
     }
     
+    // NEW: Team quality multiplier - increases confidence when there's a clear quality gap
+    // This is applied BEFORE capping to allow differentiation
+    if (qualityGap >= 50) {
+      confidence += 25;
+      factors.push({
+        name: 'Enorm kvalitetsforskel',
+        impact: homeQuality > awayQuality ? 'positive' : 'negative',
+        weight: 0.3,
+        description: `${homeQuality > awayQuality ? homeTeam.name : awayTeam.name} er et langt bedre hold (kvalitetsscore: ${Math.round(homeQuality)} vs ${Math.round(awayQuality)})`
+      });
+    } else if (qualityGap >= 40) {
+      confidence += 20;
+      factors.push({
+        name: 'Stor kvalitetsforskel',
+        impact: homeQuality > awayQuality ? 'positive' : 'negative',
+        weight: 0.25,
+        description: `${homeQuality > awayQuality ? homeTeam.name : awayTeam.name} er et markant bedre hold (kvalitetsscore: ${Math.round(homeQuality)} vs ${Math.round(awayQuality)})`
+      });
+    } else if (qualityGap >= 30) {
+      confidence += 15;
+      factors.push({
+        name: 'Betydelig kvalitetsforskel',
+        impact: homeQuality > awayQuality ? 'positive' : 'negative',
+        weight: 0.2,
+        description: `${homeQuality > awayQuality ? homeTeam.name : awayTeam.name} er et bedre hold (kvalitetsscore: ${Math.round(homeQuality)} vs ${Math.round(awayQuality)})`
+      });
+    } else if (qualityGap >= 20) {
+      confidence += 10;
+    } else if (qualityGap >= 10) {
+      confidence += 5;
+    }
+    
+    // NEW: Boost confidence for top teams (quality > 65) playing bottom teams (quality < 30)
+    if ((homeQuality > 65 && awayQuality < 30) || (awayQuality > 65 && homeQuality < 30)) {
+      confidence += 15;
+    }
+    
     // Significantly reduce confidence after winter break
     if (afterWinterBreak) {
       // Reduce confidence by 20-30% depending on break length
@@ -294,9 +339,9 @@ export class PredictionEngine {
       confidence -= confidenceReduction;
     }
     
-    // Cap between 35% and 95% (lower minimum after winter break)
+    // Cap between 35% and 98% (allow higher max for very clear predictions)
     const minConfidence = afterWinterBreak ? 35 : 50;
-    confidence = Math.min(Math.max(Math.round(confidence), minConfidence), 95);
+    confidence = Math.min(Math.max(Math.round(confidence), minConfidence), 98);
 
     return {
       matchId,
@@ -325,5 +370,38 @@ export class PredictionEngine {
   private static calculateWinRate(team: Team): number {
     const totalGames = team.stats.wins + team.stats.draws + team.stats.losses;
     return totalGames > 0 ? team.stats.wins / totalGames : 0;
+  }
+
+  /**
+   * Calculate overall team quality score (0-100)
+   * Based on multiple factors: win rate, goal difference, form, clean sheets
+   */
+  private static calculateTeamQuality(team: Team): number {
+    const totalGames = team.stats.wins + team.stats.draws + team.stats.losses;
+    if (totalGames === 0) return 50;
+
+    // Win rate component (0-30 points)
+    const winRate = team.stats.wins / totalGames;
+    const winRateScore = winRate * 30;
+
+    // Goal difference component (0-25 points)
+    const goalDiff = team.stats.goalsScored - team.stats.goalsConceded;
+    const goalDiffScore = Math.min(Math.max((goalDiff + 25) / 2, 0), 25);
+
+    // Form component (0-20 points)
+    const formScore = this.calculateFormScore(team.form);
+    const maxFormScore = 15 * 5; // 5 results, max 3 points each with weight 5
+    const formPercentage = (formScore / maxFormScore) * 20;
+
+    // Clean sheet rate component (0-15 points)
+    const cleanSheetRate = team.stats.cleanSheets / totalGames;
+    const cleanSheetScore = cleanSheetRate * 15;
+
+    // Points per game component (0-10 points)
+    const points = (team.stats.wins * 3) + team.stats.draws;
+    const pointsPerGame = points / totalGames;
+    const pointsScore = (pointsPerGame / 3) * 10; // Max 3 points per game
+
+    return winRateScore + goalDiffScore + formPercentage + cleanSheetScore + pointsScore;
   }
 }

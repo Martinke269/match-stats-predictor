@@ -25,6 +25,54 @@ export default function HomePage() {
     return null;
   }
 
+  // Helper function to calculate team importance based on league position
+  const getTeamImportance = (teamName: string, predictions: any[]) => {
+    // Find the team in the predictions to get their stats
+    for (const pred of predictions) {
+      const matchParts = pred.match.split(' vs ');
+      const homeTeam = matchParts[0];
+      const awayTeam = matchParts[1];
+      
+      // This is a simplified approach - in a real scenario, you'd want to access
+      // the actual team data to calculate league points
+      // For now, we'll use a heuristic based on team names and common knowledge
+      const topTeams = [
+        'manchester city', 'liverpool', 'arsenal', 'chelsea',
+        'bayern', 'dortmund', 'leipzig', 'leverkusen',
+        'psg', 'marseille', 'monaco', 'lille',
+        'inter', 'ac milan', 'juventus', 'napoli',
+        'real madrid', 'barcelona', 'atlético madrid', 'athletic bilbao',
+        'fc københavn', 'fc midtjylland', 'brøndby'
+      ];
+      
+      const lowerTeamName = teamName.toLowerCase();
+      if (topTeams.some(top => lowerTeamName.includes(top))) {
+        return 100; // High importance for top teams
+      }
+    }
+    return 50; // Default importance for other teams
+  };
+
+  // Helper function to sort matches by confidence with tie-breaking based on team importance
+  const sortMatchesByConfidenceAndImportance = (predictions: any[]) => {
+    return [...predictions].sort((a, b) => {
+      const confidenceDiff = b.prediction.confidence - a.prediction.confidence;
+      
+      // If confidence is very close (within 1 point), use team importance as tie-breaker
+      if (Math.abs(confidenceDiff) < 1) {
+        const aTeams = a.match.split(' vs ');
+        const bTeams = b.match.split(' vs ');
+        
+        const aImportance = getTeamImportance(aTeams[0], predictions) + getTeamImportance(aTeams[1], predictions);
+        const bImportance = getTeamImportance(bTeams[0], predictions) + getTeamImportance(bTeams[1], predictions);
+        
+        return bImportance - aImportance; // Higher importance = better position
+      }
+      
+      return confidenceDiff;
+    });
+  };
+
   // Get all predictions from all leagues
   const allSuperligaPredictions = generateSuperligaPredictions();
   const allLigue1Predictions = generateLigue1Predictions();
@@ -36,30 +84,13 @@ export default function HomePage() {
   const allBundesligaPredictions = generateBundesligaPredictions();
   const allLaLigaPredictions = generateLaLigaPredictions();
   
-  // Get top 3 matches from each league sorted by highest confidence score
-  const topSuperliga = [...allSuperligaPredictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
-  
-  const topLigue1 = [...allLigue1Predictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
-  
-  const topPremierLeague = [...allPremierLeaguePredictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
-  
-  const topSerieA = [...allSerieAPredictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
-  
-  const topBundesliga = [...allBundesligaPredictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
-  
-  const topLaLiga = [...allLaLigaPredictions]
-    .sort((a, b) => b.prediction.confidence - a.prediction.confidence)
-    .slice(0, 3);
+  // Get top 2 matches from each league sorted by confidence and team importance
+  const topSuperliga = sortMatchesByConfidenceAndImportance(allSuperligaPredictions).slice(0, 2);
+  const topLigue1 = sortMatchesByConfidenceAndImportance(allLigue1Predictions).slice(0, 2);
+  const topPremierLeague = sortMatchesByConfidenceAndImportance(allPremierLeaguePredictions).slice(0, 2);
+  const topSerieA = sortMatchesByConfidenceAndImportance(allSerieAPredictions).slice(0, 2);
+  const topBundesliga = sortMatchesByConfidenceAndImportance(allBundesligaPredictions).slice(0, 2);
+  const topLaLiga = sortMatchesByConfidenceAndImportance(allLaLigaPredictions).slice(0, 2);
 
   // Match schedules
   const superligaSchedule = [
@@ -130,6 +161,80 @@ export default function HomePage() {
         
         <AIDisclaimer />
         
+        <FooterInfo />
+
+        {/* Superligaen - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Superligaen"
+          leagueIcon={<Trophy className="h-8 w-8 text-yellow-400" />}
+          predictions={topSuperliga}
+          matchSchedule={superligaSchedule}
+          leagueLink="/superliga"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-yellow-500"
+          timeColor="text-blue-300"
+        />
+
+        {/* Premier League - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Premier League"
+          leagueIcon={<Trophy className="h-8 w-8 text-pink-400" />}
+          predictions={topPremierLeague}
+          matchSchedule={premierLeagueSchedule}
+          leagueLink="/premier-league"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-pink-500"
+          timeColor="text-pink-300"
+        />
+
+        {/* Serie A - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Serie A"
+          leagueIcon={<Trophy className="h-8 w-8 text-blue-400" />}
+          predictions={topSerieA}
+          matchSchedule={serieASchedule}
+          leagueLink="/serie-a"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-blue-500"
+          timeColor="text-blue-300"
+        />
+
+        {/* La Liga - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="La Liga"
+          leagueIcon={<Trophy className="h-8 w-8 text-orange-400" />}
+          predictions={topLaLiga}
+          matchSchedule={laLigaSchedule}
+          leagueLink="/la-liga"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-orange-500"
+          timeColor="text-orange-300"
+        />
+
+        {/* Bundesliga - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Bundesliga"
+          leagueIcon={<Trophy className="h-8 w-8 text-red-400" />}
+          predictions={topBundesliga}
+          matchSchedule={bundesligaSchedule}
+          leagueLink="/bundesliga"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-red-500"
+          timeColor="text-red-300"
+        />
+
+        {/* Ligue 1 - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Ligue 1"
+          leagueIcon={<Trophy className="h-8 w-8 text-purple-400" />}
+          predictions={topLigue1}
+          matchSchedule={ligue1Schedule}
+          leagueLink="/ligue1"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-purple-500"
+          timeColor="text-purple-300"
+        />
+
         {/* Power Rankings Link */}
         <div className="mb-8 px-4">
           <Link href="/power-rankings">
@@ -149,80 +254,6 @@ export default function HomePage() {
             </div>
           </Link>
         </div>
-        
-        <FooterInfo />
-
-        {/* Superligaen - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="Superligaen"
-          leagueIcon={<Trophy className="h-8 w-8 text-yellow-400" />}
-          predictions={topSuperliga}
-          matchSchedule={superligaSchedule}
-          leagueLink="/superliga"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-yellow-500"
-          timeColor="text-blue-300"
-        />
-
-        {/* Premier League - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="Premier League"
-          leagueIcon={<Trophy className="h-8 w-8 text-pink-400" />}
-          predictions={topPremierLeague}
-          matchSchedule={premierLeagueSchedule}
-          leagueLink="/premier-league"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-pink-500"
-          timeColor="text-pink-300"
-        />
-
-        {/* Serie A - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="Serie A"
-          leagueIcon={<Trophy className="h-8 w-8 text-blue-400" />}
-          predictions={topSerieA}
-          matchSchedule={serieASchedule}
-          leagueLink="/serie-a"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-blue-500"
-          timeColor="text-blue-300"
-        />
-
-        {/* La Liga - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="La Liga"
-          leagueIcon={<Trophy className="h-8 w-8 text-orange-400" />}
-          predictions={topLaLiga}
-          matchSchedule={laLigaSchedule}
-          leagueLink="/la-liga"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-orange-500"
-          timeColor="text-orange-300"
-        />
-
-        {/* Bundesliga - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="Bundesliga"
-          leagueIcon={<Trophy className="h-8 w-8 text-red-400" />}
-          predictions={topBundesliga}
-          matchSchedule={bundesligaSchedule}
-          leagueLink="/bundesliga"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-red-500"
-          timeColor="text-red-300"
-        />
-
-        {/* Ligue 1 - Top 3 Matches */}
-        <LeagueMatchesSection
-          leagueName="Ligue 1"
-          leagueIcon={<Trophy className="h-8 w-8 text-purple-400" />}
-          predictions={topLigue1}
-          matchSchedule={ligue1Schedule}
-          leagueLink="/ligue1"
-          badgeColor="bg-green-500"
-          borderColor="hover:border-purple-500"
-          timeColor="text-purple-300"
-        />
       </div>
     </div>
   );

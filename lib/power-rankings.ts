@@ -158,8 +158,20 @@ export function generateLeaguePowerRanking(
     };
   });
   
-  // Sort by power score
-  teamRankings.sort((a, b) => b.powerScore - a.powerScore);
+  // Sort by power score, with tie-breaking based on league points
+  // When teams have the same score, promote top teams over middle teams over bottom teams
+  teamRankings.sort((a, b) => {
+    const scoreDiff = b.powerScore - a.powerScore;
+    
+    // If power scores are equal (or very close), use league points as tie-breaker
+    if (Math.abs(scoreDiff) < 0.01) {
+      const aPoints = a.team.stats.wins * 3 + a.team.stats.draws;
+      const bPoints = b.team.stats.wins * 3 + b.team.stats.draws;
+      return bPoints - aPoints; // Higher points = better position (top team)
+    }
+    
+    return scoreDiff;
+  });
   
   // Calculate championship probabilities
   const maxScore = teamRankings[0].powerScore;
