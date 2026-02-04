@@ -97,10 +97,12 @@ export function LeagueMatchesSection({
                   </div>
                   
                   {/* Team Names and Trend Icon */}
-                  <div className="flex items-center justify-between gap-3 mb-6">
-                    <div className="text-xl sm:text-2xl font-bold text-white text-left flex-1">{homeTeam}</div>
-                    {getResultIcon(prediction.homeWinProbability, prediction.awayWinProbability)}
-                    <div className="text-xl sm:text-2xl font-bold text-white text-right flex-1">{awayTeam}</div>
+                  <div className="flex items-center justify-between gap-2 mb-6">
+                    <div className="text-base sm:text-lg font-bold text-white text-left flex-1 truncate">{homeTeam}</div>
+                    <div className="flex-shrink-0">
+                      {getResultIcon(prediction.homeWinProbability, prediction.awayWinProbability)}
+                    </div>
+                    <div className="text-base sm:text-lg font-bold text-white text-right flex-1 truncate">{awayTeam}</div>
                   </div>
 
                   {/* Large Score Display */}
