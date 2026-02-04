@@ -313,7 +313,7 @@ export default function HomePage() {
                   <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400 flex-shrink-0" />
                   <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Power Rankings</h2>
-                    <p className="text-sm sm:text-base text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i hver liga</p>
+                    <p className="text-sm sm:text-base text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i alle 8 ligaer</p>
                   </div>
                 </div>
                 <div className="bg-yellow-500 text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
