@@ -79,7 +79,7 @@ export function LeagueMatchesSection({
         </Badge>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 mb-8 sm:mb-12 px-4">
         {predictions.map(({ match, prediction }) => {
           const schedule = matchSchedule.find(s => s.match === match);
           const homeTeam = match.split(' vs ')[0];
@@ -103,12 +103,33 @@ export function LeagueMatchesSection({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Predicted Score */}
+                  {/* Prediction Result - 1X2 */}
                   <div className="text-center mb-4">
-                    <div className="text-3xl sm:text-4xl font-bold text-white">
+                    <div className="inline-block bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/40 rounded-lg px-6 py-3">
+                      <div className="text-xs text-blue-200 mb-1">PREDICTION</div>
+                      <div className="text-3xl sm:text-4xl font-bold text-white">
+                        {prediction.homeWinProbability > prediction.awayWinProbability && prediction.homeWinProbability > prediction.drawProbability
+                          ? '1'
+                          : prediction.awayWinProbability > prediction.homeWinProbability && prediction.awayWinProbability > prediction.drawProbability
+                          ? '2'
+                          : 'X'}
+                      </div>
+                      <div className="text-xs text-slate-300 mt-1">
+                        {prediction.homeWinProbability > prediction.awayWinProbability && prediction.homeWinProbability > prediction.drawProbability
+                          ? 'Hjemmesejr'
+                          : prediction.awayWinProbability > prediction.homeWinProbability && prediction.awayWinProbability > prediction.drawProbability
+                          ? 'Udesejr'
+                          : 'Uafgjort'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Predicted Score - De-emphasized */}
+                  <div className="text-center mb-4">
+                    <div className="text-lg text-slate-400">
                       {prediction.predictedScore.home} - {prediction.predictedScore.away}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-400 mt-1">Forudsagt resultat</div>
+                    <div className="text-xs text-slate-500">Forudsagt score</div>
                   </div>
 
                   {/* Probabilities */}

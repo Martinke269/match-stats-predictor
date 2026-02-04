@@ -23,6 +23,8 @@ export class PredictionEngine {
         europeanCompetition?: boolean;
         cupMatches?: number;
       };
+      enableUpsetFactor?: boolean; // Enable surprise factor for underdogs
+      upsetFactorStrength?: number; // 0-1, how strong the upset factor should be (default 0.3)
     }
   ): Prediction {
     const factors: PredictionFactor[] = [];
@@ -30,6 +32,8 @@ export class PredictionEngine {
     const winterBreakMonths = options?.winterBreakMonths || 2;
     const homeFixtureCongestion = options?.homeFixtureCongestion;
     const awayFixtureCongestion = options?.awayFixtureCongestion;
+    const enableUpsetFactor = options?.enableUpsetFactor !== false; // Default to true
+    const upsetFactorStrength = options?.upsetFactorStrength || 0.3;
     
     // Winter break warning - form is less reliable
     if (afterWinterBreak) {
@@ -167,6 +171,57 @@ export class PredictionEngine {
     const awayQuality = this.calculateTeamQuality(awayTeam);
     const qualityGap = Math.abs(homeQuality - awayQuality);
     
+    // UPSET FACTOR: Give underdogs a chance to win
+    // This adds unpredictability and makes the predictions more realistic
+    let upsetBonus = 0;
+    let underdogTeam: Team | null = null;
+    let favoriteTeam: Team | null = null;
+    let isHomeUnderdog = false;
+    
+    if (enableUpsetFactor && qualityGap >= 15) {
+      // Determine who is the underdog
+      isHomeUnderdog = homeQuality < awayQuality;
+      underdogTeam = isHomeUnderdog ? homeTeam : awayTeam;
+      favoriteTeam = isHomeUnderdog ? awayTeam : homeTeam;
+      
+      // Calculate upset potential based on:
+      // 1. Quality gap (bigger gap = more upset potential)
+      // 2. Underdog's recent form (good form = more upset potential)
+      // 3. Random factor (adds unpredictability)
+      
+      const underdogFormScore = this.calculateFormScore(underdogTeam.form);
+      const maxFormScore = 15 * 5;
+      const underdogFormStrength = underdogFormScore / maxFormScore;
+      
+      // Base upset chance increases with quality gap (paradoxically)
+      // When favorites are heavily favored, upsets become more likely
+      const gapFactor = Math.min(qualityGap / 50, 1); // 0-1 based on gap
+      
+      // Form factor: Good recent form increases upset chance
+      const formFactor = underdogFormStrength * 0.5; // 0-0.5
+      
+      // Random factor: Adds unpredictability (0-0.3)
+      const randomFactor = Math.random() * 0.3;
+      
+      // Calculate total upset potential (0-1.8, typically 0.3-0.8)
+      const upsetPotential = (gapFactor * 0.6) + formFactor + randomFactor;
+      
+      // Apply upset bonus (scaled by strength setting)
+      // This gives the underdog a 5-15 point boost in their score
+      upsetBonus = upsetPotential * 15 * upsetFactorStrength;
+      
+      // Add upset factor to factors list if significant
+      if (upsetBonus >= 3) {
+        const upsetPercentage = Math.round(upsetPotential * 100);
+        factors.push({
+          name: 'Overraskelsesfaktor',
+          impact: isHomeUnderdog ? 'positive' : 'negative',
+          weight: 0.15,
+          description: `⚡ ${underdogTeam.name} har ${upsetPercentage}% "underdog-potentiale" - kan overraske!`
+        });
+      }
+    }
+    
     // Calculate probabilities
     let homeScore = 50; // Base score
     
@@ -175,6 +230,11 @@ export class PredictionEngine {
     
     // NEW: Team quality impact on probability (max ±20 points)
     homeScore += ((homeQuality - awayQuality) / 5) * impactMultiplier;
+    
+    // Apply upset bonus to underdog
+    if (upsetBonus > 0) {
+      homeScore += isHomeUnderdog ? upsetBonus : -upsetBonus;
+    }
     
     // Fixture congestion impact - reduces team's effective strength
     const fixtureLoadDifference = awayFixtureLoad - homeFixtureLoad;

@@ -5,6 +5,8 @@ import { ligue1Teams } from '@/lib/data/leagues/ligue-1';
 import { serieATeams } from '@/lib/data/leagues/serie-a';
 import { bundesligaTeams } from '@/lib/data/leagues/bundesliga';
 import { laLigaTeams } from '@/lib/data/leagues/la-liga';
+import { primeiraLigaTeams } from '@/lib/data/leagues/primeira-liga';
+import { eredivisieTeams } from '@/lib/data/leagues/eredivisie';
 
 export interface PowerRanking {
   rank: number;
@@ -236,6 +238,8 @@ export function getAllLeaguePowerRankings(): LeaguePowerRanking[] {
     generateLeaguePowerRanking('La Liga', 'la-liga', laLigaTeams),
     generateLeaguePowerRanking('Serie A', 'serie-a', serieATeams),
     generateLeaguePowerRanking('Bundesliga', 'bundesliga', bundesligaTeams),
-    generateLeaguePowerRanking('Ligue 1', 'ligue1', ligue1Teams)
+    generateLeaguePowerRanking('Ligue 1', 'ligue1', ligue1Teams),
+    generateLeaguePowerRanking('Primeira Liga', 'primeira-liga', primeiraLigaTeams),
+    generateLeaguePowerRanking('Eredivisie', 'eredivisie', eredivisieTeams)
   ];
 }

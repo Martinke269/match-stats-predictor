@@ -1,19 +1,19 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { generateSuperligaPredictions } from '@/lib/superliga-predictions';
-import { TrendingUp, TrendingDown, Minus, Trophy, Calendar, Home, Download } from 'lucide-react';
+import { generateEredivisiePredictions } from '@/lib/eredivisie-predictions';
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Calendar, Home, Info, Download } from 'lucide-react';
 import Link from 'next/link';
 import { exportLeaguePredictionsToPDF } from '@/lib/utils/league-pdf-helper';
 import { AIDisclaimer } from '@/components/ai-disclaimer';
 
-export default function SuperligaPage() {
-  const predictions = generateSuperligaPredictions();
+export default function EredivisiePage() {
+  const predictions = generateEredivisiePredictions();
 
   const handleExportAllPDF = () => {
-    exportLeaguePredictionsToPDF(predictions, 'Superligaen', 'Kampdag 25');
+    exportLeaguePredictionsToPDF(predictions, 'Eredivisie', 'Kampdag 22');
   };
 
   const getResultIcon = (homeProb: number, awayProb: number) => {
@@ -22,14 +22,18 @@ export default function SuperligaPage() {
     return <Minus className="h-5 w-5 text-yellow-500" />;
   };
 
-  // Match schedule
+
+  // Match schedule from the user's image - Kampdag 22 af 34
   const matchSchedule = [
-    { match: 'AGF vs OB', day: 'Fredag', time: '19:00' },
-    { match: 'FC Nordsjælland vs SønderjyskE', day: 'Søndag', time: '14:00' },
-    { match: 'Silkeborg IF vs Viborg FF', day: 'Søndag', time: '14:00' },
-    { match: 'FC Midtjylland vs FC København', day: 'Søndag', time: '16:00' },
-    { match: 'Brøndby IF vs Randers FC', day: 'Søndag', time: '18:00' },
-    { match: 'Vejle BK vs FC Fredericia', day: 'Mandag', time: '19:00' }
+    { match: 'Breda vs Excelsior', day: 'Fre', time: '6.2 20.00' },
+    { match: 'Zwolle vs Volendam', day: 'Lør', time: '7.2 18.45' },
+    { match: 'NEC vs Heracles', day: 'Lør', time: '7.2 16.30' },
+    { match: 'Twente vs Heerenveen', day: 'Lør', time: '7.2 20.00' },
+    { match: 'Sittard vs Sparta Rotterdam', day: 'Lør', time: '7.2 21.00' },
+    { match: 'Utrecht vs Feyenoord', day: 'Søn', time: '8.2 12.15' },
+    { match: 'Go Ahead Eagles vs Telstar', day: 'Søn', time: '8.2 14.30' },
+    { match: 'AZ vs Ajax', day: 'Søn', time: '8.2 14.30' },
+    { match: 'Groningen vs PSV', day: 'Søn', time: '8.2 16.45' }
   ];
 
   return (
@@ -47,12 +51,12 @@ export default function SuperligaPage() {
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
               <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400 flex-shrink-0" />
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Superligaen</h1>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">Eredivisie</h1>
             </div>
             <p className="text-lg sm:text-xl text-blue-200 px-4">AI-drevne predictions på denne rundes kampe</p>
             <div className="flex items-center justify-center gap-2 mt-4 text-blue-300 text-sm sm:text-base">
               <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span>Kampdag 25 af 38</span>
+              <span>Kampdag 22 af 34</span>
             </div>
             <div className="mt-4">
               <Button 
@@ -178,16 +182,12 @@ export default function SuperligaPage() {
                     </div>
                   </div>
 
-                  {/* Confidence Badge */}
-                  <div className="flex items-center justify-center mb-3">
-                  </div>
-
                   {/* Key Factors */}
                   {prediction.factors.length > 0 && (
                     <div className="border-t border-slate-700 pt-3">
                       <div className="text-xs font-semibold text-slate-400 mb-2">Nøglefaktorer:</div>
                       <div className="space-y-1">
-                        {prediction.factors.slice(0, 4).map((factor, i) => (
+                        {prediction.factors.slice(0, 3).map((factor, i) => (
                           <div key={i} className="flex items-start gap-2">
                             <span className="text-xs">
                               {factor.impact === 'positive' ? '✅' : '⚠️'}

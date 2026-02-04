@@ -7,7 +7,7 @@ import { AIDisclaimer } from '@/components/ai-disclaimer';
 
 export const metadata = {
   title: 'Power Rankings - Mesterskabsfavoritter | Fodbold Prædiktioner',
-  description: 'Se vores power rankings og find ud af, hvem der er favoritter til at vinde mesterskabet i Superligaen, Premier League, La Liga, Serie A, Bundesliga og Ligue 1.',
+  description: 'Se vores power rankings og find ud af, hvem der er favoritter til at vinde mesterskabet i Superligaen, Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Primeira Liga og Eredivisie.',
 };
 
 export default function PowerRankingsPage() {
@@ -33,6 +33,8 @@ export default function PowerRankingsPage() {
       'serie-a': 'from-blue-600/30 to-cyan-600/30 border-blue-400',
       'bundesliga': 'from-red-600/30 to-yellow-600/30 border-red-400',
       'ligue1': 'from-purple-600/30 to-blue-600/30 border-purple-400',
+      'primeira-liga': 'from-green-600/30 to-emerald-600/30 border-green-400',
+      'eredivisie': 'from-orange-600/30 to-amber-600/30 border-orange-400',
     };
     return colors[leagueId] || 'from-gray-600/30 to-slate-600/30 border-gray-400';
   };

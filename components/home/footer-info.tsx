@@ -11,18 +11,12 @@ export function FooterInfo() {
       <CardContent className="pt-6">
         <div className="text-center text-slate-400 text-sm">
           <p className="mb-2">
-            Predictions er baseret på holdenes aktuelle form, statistikker, målforskel, 
-            sejrsrater og hjemmebanefordel.
+            Se udvalgte kampe herunder fra de 8 ligaer:
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-4xl mx-auto mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto mt-4">
             <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
               <Link href="/superliga">
                 Superliga
-              </Link>
-            </Button>
-            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
-              <Link href="/ligue1">
-                Ligue 1
               </Link>
             </Button>
             <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
@@ -45,6 +39,40 @@ export function FooterInfo() {
                 Bundesliga
               </Link>
             </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/ligue1">
+                Ligue 1
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/primeira-liga">
+                Primeira Liga
+              </Link>
+            </Button>
+            <Button variant="outline" className="w-full border-blue-600/30 bg-blue-600/10 text-blue-300 hover:bg-blue-600/20 hover:border-blue-500/50" asChild>
+              <Link href="/eredivisie">
+                Eredivisie
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-6 pt-4 border-t border-slate-700">
+            <div className="flex flex-wrap justify-center gap-4 text-xs">
+              <Link href="/about" className="text-slate-400 hover:text-blue-300 transition-colors underline">
+                Om os
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link href="/faq" className="text-slate-400 hover:text-blue-300 transition-colors underline">
+                FAQ
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link href="/cookie-policy" className="text-slate-400 hover:text-blue-300 transition-colors underline">
+                Cookie-politik
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link href="/terms" className="text-slate-400 hover:text-blue-300 transition-colors underline">
+                Brugerbetingelser
+              </Link>
+            </div>
           </div>
         </div>
       </CardContent>

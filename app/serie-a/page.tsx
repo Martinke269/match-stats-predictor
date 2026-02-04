@@ -102,10 +102,41 @@ export default function SerieAPage() {
                 <CardContent>
                   {/* Predicted Score */}
                   <div className="text-center mb-4">
-                    <div className="text-4xl font-bold text-white">
+                    <div className="text-4xl sm:text-5xl font-bold text-white mb-2">
                       {prediction.predictedScore.home} - {prediction.predictedScore.away}
                     </div>
-                    <div className="text-sm text-slate-400 mt-1">Forudsagt resultat</div>
+                    <div className="text-sm text-slate-400 mb-3">Forudsagt resultat</div>
+                    
+                    {/* 1X2 Prediction */}
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm text-slate-300 font-medium">1X2:</span>
+                      <div className="flex gap-2">
+                        <button className={`px-4 py-2 rounded font-bold text-base ${
+                          prediction.homeWinProbability > prediction.drawProbability && 
+                          prediction.homeWinProbability > prediction.awayWinProbability
+                            ? 'bg-green-500 text-white'
+                            : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          1
+                        </button>
+                        <button className={`px-4 py-2 rounded font-bold text-base ${
+                          prediction.drawProbability > prediction.homeWinProbability && 
+                          prediction.drawProbability > prediction.awayWinProbability
+                            ? 'bg-green-500 text-white'
+                            : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          X
+                        </button>
+                        <button className={`px-4 py-2 rounded font-bold text-base ${
+                          prediction.awayWinProbability > prediction.homeWinProbability && 
+                          prediction.awayWinProbability > prediction.drawProbability
+                            ? 'bg-green-500 text-white'
+                            : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          2
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Probabilities */}

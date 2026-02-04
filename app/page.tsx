@@ -7,6 +7,8 @@ import { generatePremierLeaguePredictions } from '@/lib/premier-league-predictio
 import { serieAPredictions } from '@/lib/serie-a-predictions';
 import { generateBundesligaPredictions } from '@/lib/bundesliga-predictions';
 import { generateLaLigaPredictions } from '@/lib/la-liga-predictions';
+import { generatePrimeiraLigaPredictions } from '@/lib/primeira-liga-predictions';
+import { generateEredivisiePredictions } from '@/lib/eredivisie-predictions';
 import { Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { HeroSection } from '@/components/home/hero-section';
@@ -83,6 +85,8 @@ export default function HomePage() {
   }));
   const allBundesligaPredictions = generateBundesligaPredictions();
   const allLaLigaPredictions = generateLaLigaPredictions();
+  const allPrimeiraLigaPredictions = generatePrimeiraLigaPredictions();
+  const allEredivisiePredictions = generateEredivisiePredictions();
   
   // Get top 2 matches from each league sorted by confidence and team importance
   const topSuperliga = sortMatchesByConfidenceAndImportance(allSuperligaPredictions).slice(0, 2);
@@ -91,6 +95,8 @@ export default function HomePage() {
   const topSerieA = sortMatchesByConfidenceAndImportance(allSerieAPredictions).slice(0, 2);
   const topBundesliga = sortMatchesByConfidenceAndImportance(allBundesligaPredictions).slice(0, 2);
   const topLaLiga = sortMatchesByConfidenceAndImportance(allLaLigaPredictions).slice(0, 2);
+  const topPrimeiraLiga = sortMatchesByConfidenceAndImportance(allPrimeiraLigaPredictions).slice(0, 2);
+  const topEredivisie = sortMatchesByConfidenceAndImportance(allEredivisiePredictions).slice(0, 2);
 
   // Match schedules
   const superligaSchedule = [
@@ -154,10 +160,49 @@ export default function HomePage() {
     { match: 'Villarreal vs Espanyol', day: 'Man', time: '9.2 21.00' }
   ];
 
+  const primeiraLigaSchedule = [
+    { match: 'Estrela da Amadora vs Santa Clara', day: 'Lør', time: '7.2 16.30' },
+    { match: 'Moreirense vs Gil Vicente', day: 'Lør', time: '7.2 16.30' },
+    { match: 'Estoril vs Tondela', day: 'Lør', time: '7.2 19.00' },
+    { match: 'Arouca vs Guimaraes', day: 'Lør', time: '7.2 21.30' },
+    { match: 'Nacional vs Casa Pia', day: 'Søn', time: '8.2 16.30' },
+    { match: 'Braga vs Rio Ave', day: 'Søn', time: '8.2 19.00' },
+    { match: 'Benfica vs Alverca', day: 'Søn', time: '8.2 21.30' },
+    { match: 'Famalicao vs AVS', day: 'Man', time: '9.2 19.45' },
+    { match: 'Porto vs Sporting', day: 'Man', time: '9.2 21.45' }
+  ];
+
+  const eredivisieSchedule = [
+    { match: 'Ajax vs PSV', day: 'Lør', time: '7.2 18.45' },
+    { match: 'Feyenoord vs AZ Alkmaar', day: 'Lør', time: '7.2 21.00' },
+    { match: 'FC Twente vs FC Utrecht', day: 'Søn', time: '8.2 14.30' },
+    { match: 'Sparta Rotterdam vs Go Ahead Eagles', day: 'Søn', time: '8.2 16.45' }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <div className="container mx-auto px-4 py-8">
         <HeroSection />
+        
+        {/* Transparent Analysis Notice */}
+        <div className="mb-8 px-4">
+          <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/40 rounded-lg p-6 backdrop-blur-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Analyse af Rigtige Fodboldkampe</h3>
+                <p className="text-blue-100 text-base leading-relaxed">
+                  Vi analyserer <span className="font-bold text-white">ALLE kampe</span> fra de 8 ligaer - ingen cherry-picking! 
+                  Hvis statistikken ser forkert ud, er det fordi vi viser den objektive sandhed - ikke kun de "sikre" kampe.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <AIDisclaimer />
         
@@ -233,6 +278,30 @@ export default function HomePage() {
           badgeColor="bg-green-500"
           borderColor="hover:border-purple-500"
           timeColor="text-purple-300"
+        />
+
+        {/* Primeira Liga - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Primeira Liga"
+          leagueIcon={<Trophy className="h-8 w-8 text-green-400" />}
+          predictions={topPrimeiraLiga}
+          matchSchedule={primeiraLigaSchedule}
+          leagueLink="/primeira-liga"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-green-500"
+          timeColor="text-green-300"
+        />
+
+        {/* Eredivisie - Top 2 Matches */}
+        <LeagueMatchesSection
+          leagueName="Eredivisie"
+          leagueIcon={<Trophy className="h-8 w-8 text-orange-500" />}
+          predictions={topEredivisie}
+          matchSchedule={eredivisieSchedule}
+          leagueLink="/eredivisie"
+          badgeColor="bg-green-500"
+          borderColor="hover:border-orange-600"
+          timeColor="text-orange-300"
         />
 
         {/* Power Rankings Link */}
