@@ -68,9 +68,11 @@ export function LeagueMatchesSection({
           {leagueIcon}
           {leagueName}
         </h2>
-        <Badge className={`${badgeColor} text-white text-sm sm:text-lg px-3 sm:px-4 py-1 sm:py-2`}>
-          {predictions.length} kampe
-        </Badge>
+        <Link href={leagueLink}>
+          <Badge className={`${badgeColor} text-white text-sm px-4 py-2 cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap`}>
+            Udvalgte kampe - Klik for alle
+          </Badge>
+        </Link>
       </div>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 mb-8 sm:mb-12 px-4">
