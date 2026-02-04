@@ -38,6 +38,7 @@ interface LeagueMatchesSectionProps {
   badgeColor: string;
   borderColor: string;
   timeColor: string;
+  leagueId?: string;
 }
 
 export function LeagueMatchesSection({
@@ -49,6 +50,7 @@ export function LeagueMatchesSection({
   badgeColor,
   borderColor,
   timeColor,
+  leagueId,
 }: LeagueMatchesSectionProps) {
   const getResultIcon = (homeProb: number, awayProb: number) => {
     if (homeProb > awayProb + 10) return <TrendingUp className="h-5 w-5 text-green-500" />;
@@ -68,11 +70,21 @@ export function LeagueMatchesSection({
           {leagueIcon}
           {leagueName}
         </h2>
-        <Link href={leagueLink}>
-          <Badge className={`${badgeColor} text-white text-sm px-4 py-2 cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap`}>
-            Udvalgte kampe - Klik for alle
-          </Badge>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {leagueId && (
+            <Link href={`/power-rankings#${leagueId}`}>
+              <Badge className="bg-yellow-500/80 hover:bg-yellow-500 text-slate-900 text-sm px-4 py-2 cursor-pointer transition-all whitespace-nowrap font-bold">
+                <Trophy className="h-4 w-4 inline mr-1" />
+                Power Rankings
+              </Badge>
+            </Link>
+          )}
+          <Link href={leagueLink}>
+            <Badge className={`${badgeColor} text-white text-sm px-4 py-2 cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap`}>
+              Udvalgte kampe - Klik for alle
+            </Badge>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 mb-8 sm:mb-12 px-4">

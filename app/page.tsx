@@ -184,6 +184,26 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8">
         <HeroSection />
         
+        {/* Power Rankings Link */}
+        <div className="mb-8 px-4">
+          <Link href="/power-rankings">
+            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 rounded-lg p-4 sm:p-6 hover:scale-[1.02] transition-all cursor-pointer backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400 flex-shrink-0" />
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Power Rankings</h2>
+                    <p className="text-sm sm:text-base text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i alle 8 ligaer</p>
+                  </div>
+                </div>
+                <div className="bg-yellow-500 text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
+                  Se Rankings →
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+        
         {/* Transparent Analysis Notice */}
         <div className="mb-8 px-4">
           <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-400/40 rounded-lg p-6 backdrop-blur-sm">
@@ -215,6 +235,7 @@ export default function HomePage() {
           predictions={topSuperliga}
           matchSchedule={superligaSchedule}
           leagueLink="/superliga"
+          leagueId="superliga"
           badgeColor="bg-green-500"
           borderColor="hover:border-yellow-500"
           timeColor="text-blue-300"
@@ -227,6 +248,7 @@ export default function HomePage() {
           predictions={topPremierLeague}
           matchSchedule={premierLeagueSchedule}
           leagueLink="/premier-league"
+          leagueId="premier-league"
           badgeColor="bg-green-500"
           borderColor="hover:border-pink-500"
           timeColor="text-pink-300"
@@ -239,6 +261,7 @@ export default function HomePage() {
           predictions={topSerieA}
           matchSchedule={serieASchedule}
           leagueLink="/serie-a"
+          leagueId="serie-a"
           badgeColor="bg-green-500"
           borderColor="hover:border-blue-500"
           timeColor="text-blue-300"
@@ -251,6 +274,7 @@ export default function HomePage() {
           predictions={topLaLiga}
           matchSchedule={laLigaSchedule}
           leagueLink="/la-liga"
+          leagueId="la-liga"
           badgeColor="bg-green-500"
           borderColor="hover:border-orange-500"
           timeColor="text-orange-300"
@@ -263,6 +287,7 @@ export default function HomePage() {
           predictions={topBundesliga}
           matchSchedule={bundesligaSchedule}
           leagueLink="/bundesliga"
+          leagueId="bundesliga"
           badgeColor="bg-green-500"
           borderColor="hover:border-red-500"
           timeColor="text-red-300"
@@ -275,6 +300,7 @@ export default function HomePage() {
           predictions={topLigue1}
           matchSchedule={ligue1Schedule}
           leagueLink="/ligue1"
+          leagueId="ligue1"
           badgeColor="bg-green-500"
           borderColor="hover:border-purple-500"
           timeColor="text-purple-300"
@@ -287,6 +313,7 @@ export default function HomePage() {
           predictions={topPrimeiraLiga}
           matchSchedule={primeiraLigaSchedule}
           leagueLink="/primeira-liga"
+          leagueId="primeira-liga"
           badgeColor="bg-green-500"
           borderColor="hover:border-green-500"
           timeColor="text-green-300"
@@ -299,30 +326,11 @@ export default function HomePage() {
           predictions={topEredivisie}
           matchSchedule={eredivisieSchedule}
           leagueLink="/eredivisie"
+          leagueId="eredivisie"
           badgeColor="bg-green-500"
           borderColor="hover:border-orange-600"
           timeColor="text-orange-300"
         />
-
-        {/* Power Rankings Link */}
-        <div className="mb-8 px-4">
-          <Link href="/power-rankings">
-            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/30 rounded-lg p-4 sm:p-6 hover:scale-[1.02] transition-all cursor-pointer backdrop-blur-sm">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-                  <Trophy className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-400 flex-shrink-0" />
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Power Rankings</h2>
-                    <p className="text-sm sm:text-base text-blue-200">Se hvem der er favoritter til at vinde mesterskabet i alle 8 ligaer</p>
-                  </div>
-                </div>
-                <div className="bg-yellow-500 text-slate-900 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-sm sm:text-base w-full sm:w-auto text-center">
-                  Se Rankings →
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
       </div>
     </div>
   );

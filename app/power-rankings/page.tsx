@@ -79,7 +79,7 @@ export default function PowerRankingsPage() {
 
         {/* League Power Rankings */}
         {allRankings.map((leagueRanking) => (
-          <div key={leagueRanking.leagueId} className="mb-12">
+          <div key={leagueRanking.leagueId} id={leagueRanking.leagueId} className="mb-12 scroll-mt-8">
             <Card className={`bg-gradient-to-br ${getLeagueColor(leagueRanking.leagueId)} bg-slate-900/95 border-2 backdrop-blur-sm`}>
               <CardHeader className="bg-slate-900/60 rounded-t-lg">
                 <div className="flex items-center justify-between flex-wrap gap-4">
