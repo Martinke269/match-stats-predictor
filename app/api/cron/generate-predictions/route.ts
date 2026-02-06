@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { PredictionEngine } from '@/lib/prediction-engine';
 import { CalculationLogger } from '@/lib/calculation-logger';
 import { calculateTeamQuality, calculateFormScore } from '@/lib/prediction/calculators';
+import { getLatestAlgorithmVersion } from '@/lib/auto-tuning/version-loader';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,13 @@ export async function GET(request: Request) {
     }
 
     const supabase = await createClient();
+
+    // Load the latest algorithm version
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const algorithmVersion = await getLatestAlgorithmVersion(supabaseUrl, supabaseKey);
+    
+    console.log(`🔧 Using algorithm version ${algorithmVersion.version} (v${algorithmVersion.version_number})`);
 
     // Get all scheduled matches without predictions
     const { data: matches, error: matchesError } = await supabase
@@ -55,7 +63,7 @@ export async function GET(request: Request) {
         const startTime = Date.now();
 
         // Generate prediction using the prediction engine
-        const prediction = PredictionEngine.predictMatch(
+        const prediction = await PredictionEngine.predictMatch(
           match.home_team,
           match.away_team,
           match.id
@@ -69,7 +77,7 @@ export async function GET(request: Request) {
         const homeFormScore = calculateFormScore(match.home_team.form);
         const awayFormScore = calculateFormScore(match.away_team.form);
 
-        // Log the complete calculation
+        // Log the complete calculation with algorithm version
         const calculationId = await CalculationLogger.logCalculation({
           matchId: match.id,
           homeTeam: match.home_team,
@@ -78,6 +86,7 @@ export async function GET(request: Request) {
           league: match.league, // Pass league from match data
           calculationDurationMs: calculationDuration,
           requestSource: 'cron',
+          algorithmVersionId: algorithmVersion.id,
           intermediateData: {
             homeQualityScore: homeQuality,
             awayQualityScore: awayQuality,
@@ -131,6 +140,10 @@ export async function GET(request: Request) {
       message: 'Predictions generated successfully',
       generated: generatedCount,
       total: matches.length,
+      algorithmVersion: {
+        version: algorithmVersion.version,
+        versionNumber: algorithmVersion.version_number
+      },
       errors: errors.length > 0 ? errors : undefined
     });
 

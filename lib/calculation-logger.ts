@@ -18,6 +18,7 @@ export interface CalculationLogData {
   options?: PredictionOptions;
   calculationDurationMs?: number;
   requestSource?: 'cron' | 'api' | 'manual' | 'quick-predict';
+  algorithmVersionId?: string; // Optional: if provided, uses this instead of fetching active version
   userAgent?: string;
   ipAddress?: string;
   intermediateData?: {
@@ -62,22 +63,30 @@ export class CalculationLogger {
       const supabase = await createClient();
       const startTime = Date.now();
 
-      // Get active algorithm version
-      const { data: algorithmVersion, error: versionError } = await supabase
-        .from('algorithm_versions')
-        .select('id')
-        .eq('is_active', true)
-        .single();
+      // Get algorithm version (use provided ID or fetch active version)
+      let algorithmVersionId: string;
+      
+      if (data.algorithmVersionId) {
+        algorithmVersionId = data.algorithmVersionId;
+      } else {
+        const { data: algorithmVersion, error: versionError } = await supabase
+          .from('algorithm_versions')
+          .select('id')
+          .eq('is_active', true)
+          .single();
 
-      if (versionError || !algorithmVersion) {
-        console.error('Failed to get algorithm version:', versionError);
-        await this.logError({
-          errorType: 'error',
-          errorCode: 'MISSING_ALGORITHM_VERSION',
-          errorMessage: 'Could not find active algorithm version',
-          systemState: { versionError }
-        });
-        return null;
+        if (versionError || !algorithmVersion) {
+          console.error('Failed to get algorithm version:', versionError);
+          await this.logError({
+            errorType: 'error',
+            errorCode: 'MISSING_ALGORITHM_VERSION',
+            errorMessage: 'Could not find active algorithm version',
+            systemState: { versionError }
+          });
+          return null;
+        }
+        
+        algorithmVersionId = algorithmVersion.id;
       }
 
       // Insert main calculation record
@@ -85,7 +94,7 @@ export class CalculationLogger {
         .from('calculations')
         .insert({
           match_id: data.matchId,
-          algorithm_version_id: algorithmVersion.id,
+          algorithm_version_id: algorithmVersionId,
           calculation_duration_ms: data.calculationDurationMs,
           home_win_probability: data.prediction.homeWinProbability,
           draw_probability: data.prediction.drawProbability,

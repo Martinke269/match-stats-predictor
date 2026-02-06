@@ -2,6 +2,7 @@ import { Team, Prediction } from '../types';
 import { HeadToHeadStats } from '../api/football-api';
 import { analyzeFactors, FactorOptions } from './factors';
 import { calculateProbabilities } from './probability';
+import { analyzeNewsImpact, applyNewsImpactToProbabilities, getNewsContextForLogging } from '../news-scanner/prediction-integration';
 
 export interface PredictionOptions {
   afterWinterBreak?: boolean;
@@ -17,6 +18,7 @@ export interface PredictionOptions {
   enableUpsetFactor?: boolean;
   upsetFactorStrength?: number;
   headToHead?: HeadToHeadStats | null;
+  enableNewsImpact?: boolean;
 }
 
 /**
@@ -31,16 +33,16 @@ export class PredictionEngine {
    * @param matchId - Unique match identifier
    * @param options - Optional configuration including winter break detection and head-to-head data
    */
-  static predictMatch(
+  static async predictMatch(
     homeTeam: Team,
     awayTeam: Team,
     matchId: string,
     options?: PredictionOptions
-  ): Prediction {
+  ): Promise<Prediction> {
     // Analyze all factors
     const factorAnalysis = analyzeFactors(homeTeam, awayTeam, options as FactorOptions);
 
-    // Calculate probabilities and predicted score
+    // Calculate base probabilities and predicted score
     const probabilityResult = calculateProbabilities(
       homeTeam,
       awayTeam,
@@ -51,11 +53,46 @@ export class PredictionEngine {
       }
     );
 
+    let finalProbabilities = {
+      home: probabilityResult.homeWinProbability,
+      draw: probabilityResult.drawProbability,
+      away: probabilityResult.awayWinProbability
+    };
+
+    // Apply news impact if enabled (default: true)
+    const enableNewsImpact = options?.enableNewsImpact !== false;
+    if (enableNewsImpact) {
+      try {
+        const newsImpact = await analyzeNewsImpact(homeTeam.name, awayTeam.name);
+        
+        if (newsImpact.affectedEvents.length > 0) {
+          // Apply news impact to probabilities
+          finalProbabilities = applyNewsImpactToProbabilities(finalProbabilities, newsImpact);
+          
+          // Log news impact for transparency
+          const newsContext = getNewsContextForLogging(newsImpact);
+          console.log(`News impact for ${homeTeam.name} vs ${awayTeam.name}:\n${newsContext}`);
+          
+          // Add news factor to factors list
+          const netImpact = newsImpact.homeTeamImpact - newsImpact.awayTeamImpact;
+          factorAnalysis.factors.push({
+            name: 'News Events',
+            impact: netImpact > 0.05 ? 'positive' : netImpact < -0.05 ? 'negative' : 'neutral',
+            weight: Math.abs(netImpact) * 100,
+            description: `${newsImpact.affectedEvents.length} recent news events affecting teams`
+          });
+        }
+      } catch (error) {
+        console.error('Error analyzing news impact:', error);
+        // Continue with base probabilities if news analysis fails
+      }
+    }
+
     return {
       matchId,
-      homeWinProbability: probabilityResult.homeWinProbability,
-      drawProbability: probabilityResult.drawProbability,
-      awayWinProbability: probabilityResult.awayWinProbability,
+      homeWinProbability: finalProbabilities.home,
+      drawProbability: finalProbabilities.draw,
+      awayWinProbability: finalProbabilities.away,
       predictedScore: {
         home: probabilityResult.predictedHomeGoals,
         away: probabilityResult.predictedAwayGoals

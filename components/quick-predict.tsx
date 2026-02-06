@@ -54,7 +54,7 @@ export function QuickPredict() {
 
       // Generate prediction
       const startTime = Date.now();
-      const pred = PredictionEngine.predictMatch(
+      const pred = await PredictionEngine.predictMatch(
         data.homeTeam,
         data.awayTeam,
         `quick-${Date.now()}`
