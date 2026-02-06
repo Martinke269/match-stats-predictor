@@ -7,8 +7,20 @@ import { getLatestAlgorithmVersion } from '@/lib/auto-tuning/version-loader';
 
 export const dynamic = 'force-dynamic';
 
-// This endpoint should be called by a cron job to automatically generate predictions
-// for upcoming matches that don't have predictions yet
+/**
+ * LEGACY: Generate Predictions Cron Job
+ * 
+ * This endpoint is now primarily used for large batch operations and initial setup.
+ * For daily prediction updates, use /api/cron/daily-predictions instead.
+ * 
+ * This endpoint:
+ * - Only generates predictions for matches WITHOUT existing predictions
+ * - Does NOT update existing predictions
+ * - Useful for initial data population or backfilling
+ * 
+ * For automated daily updates with news impact and algorithm versioning,
+ * use the new daily-predictions endpoint.
+ */
 export async function GET(request: Request) {
   try {
     // Verify the request is from a cron job

@@ -11,6 +11,22 @@
     {
       "path": "/api/cron/update-matches",
       "schedule": "0 10 * * 2"
+    },
+    {
+      "path": "/api/cron/daily-predictions",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/news-scan",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/auto-tune",
+      "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/evaluate-predictions",
+      "schedule": "0 23 * * *"
     }
   ],
   "headers": [
