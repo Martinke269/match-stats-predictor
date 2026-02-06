@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Team, Prediction, PredictionFactor } from './types';
 import { HeadToHeadStats } from './api/football-api';
 import { PredictionOptions } from './prediction/engine';
+import { evaluatePrediction } from './evaluation/metrics';
 
 export interface CalculationLogData {
   matchId: string;
@@ -263,6 +264,7 @@ export class CalculationLogger {
 
   /**
    * Update calculation with actual results for evaluation
+   * Uses enhanced evaluation metrics including MAE, RMSE, Brier score, etc.
    */
   static async evaluateCalculation(
     calculationId: string,
@@ -275,7 +277,7 @@ export class CalculationLogger {
       // Get the calculation
       const { data: calculation, error: fetchError } = await supabase
         .from('calculations')
-        .select('predicted_home_score, predicted_away_score, home_win_probability, draw_probability, away_win_probability')
+        .select('predicted_home_score, predicted_away_score, home_win_probability, draw_probability, away_win_probability, confidence')
         .eq('id', calculationId)
         .single();
 
@@ -289,57 +291,27 @@ export class CalculationLogger {
         return;
       }
 
-      // Determine if prediction was correct
-      const predictedOutcome = this.determineOutcome(
+      // Use enhanced evaluation metrics
+      const evaluation = evaluatePrediction(
         calculation.predicted_home_score,
-        calculation.predicted_away_score
+        calculation.predicted_away_score,
+        actualHomeScore,
+        actualAwayScore,
+        calculation.home_win_probability,
+        calculation.draw_probability,
+        calculation.away_win_probability,
+        calculation.confidence
       );
-      const actualOutcome = this.determineOutcome(actualHomeScore, actualAwayScore);
 
-      const wasCorrect = predictedOutcome === actualOutcome;
-      const exactScore = 
-        calculation.predicted_home_score === actualHomeScore &&
-        calculation.predicted_away_score === actualAwayScore;
-
-      let evaluationType: string;
-      if (exactScore) {
-        evaluationType = 'exact_score';
-      } else if (wasCorrect) {
-        evaluationType = 'correct_outcome';
-      } else {
-        evaluationType = 'incorrect';
-      }
-
-      // Calculate accuracy score (0-100)
-      let accuracyScore = 0;
-      if (exactScore) {
-        accuracyScore = 100;
-      } else if (wasCorrect) {
-        // Partial credit for correct outcome
-        const scoreDiff = Math.abs(
-          (actualHomeScore - actualAwayScore) -
-          (calculation.predicted_home_score - calculation.predicted_away_score)
-        );
-        accuracyScore = Math.max(50, 80 - (scoreDiff * 10));
-      } else {
-        // Small credit if probabilities were reasonable
-        const actualProb = actualOutcome === 'home' 
-          ? calculation.home_win_probability
-          : actualOutcome === 'away'
-          ? calculation.away_win_probability
-          : calculation.draw_probability;
-        accuracyScore = Math.min(40, actualProb / 2);
-      }
-
-      // Update calculation
+      // Update calculation with comprehensive evaluation data
       const { error: updateError } = await supabase
         .from('calculations')
         .update({
           actual_home_score: actualHomeScore,
           actual_away_score: actualAwayScore,
-          was_correct: wasCorrect,
-          accuracy_score: accuracyScore,
-          evaluation_type: evaluationType,
+          was_correct: evaluation.wasCorrect,
+          accuracy_score: evaluation.accuracyScore,
+          evaluation_type: evaluation.evaluationType,
           evaluated_at: new Date().toISOString()
         })
         .eq('id', calculationId);
@@ -352,7 +324,7 @@ export class CalculationLogger {
           requestData: { calculationId, actualHomeScore, actualAwayScore }
         });
       } else {
-        console.log(`✅ Calculation evaluated: ${evaluationType} (accuracy: ${accuracyScore.toFixed(1)}%)`);
+        console.log(`✅ Calculation evaluated: ${evaluation.evaluationType} (accuracy: ${evaluation.accuracyScore.toFixed(1)}%, MAE: ${evaluation.totalScoreError.toFixed(1)}, Brier: ${evaluation.brierScore.toFixed(4)})`);
       }
     } catch (error) {
       console.error('Failed to evaluate calculation:', error);
