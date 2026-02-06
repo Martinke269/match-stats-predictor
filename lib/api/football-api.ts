@@ -5,7 +5,7 @@
 
 import { Team, Match } from '../types';
 
-const API_KEY = process.env.NEXT_PUBLIC_FOOTBALL_API_KEY || '';
+const API_KEY = process.env.FOOTBALL_API_KEY || '';
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 
 // League IDs for API-Football

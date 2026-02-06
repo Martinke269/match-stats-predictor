@@ -33,7 +33,7 @@ This application can fetch real-time football match data from API-Football. Foll
 
 2. **Add Your API Key**
    ```env
-   NEXT_PUBLIC_FOOTBALL_API_KEY=your_api_key_here
+   FOOTBALL_API_KEY=your_api_key_here
    ```
    Replace `your_api_key_here` with your actual API key from API-Football
 
