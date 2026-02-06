@@ -69,7 +69,7 @@ export function generateSuperligaPredictions(): {
     
     // Superligaen has winter break from mid-December to late February
     // Current date is in February, so we're right after the winter break
-    const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id, {
+    const prediction = PredictionEngine.predictMatchSync(homeTeam, awayTeam, match.id, {
       afterWinterBreak: true,
       winterBreakMonths: 2, // Approximately 2 months break
       homeFixtureCongestion: match.homeFixtureCongestion,

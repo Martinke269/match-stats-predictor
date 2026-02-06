@@ -84,7 +84,7 @@ export function generatePremierLeaguePredictions(): {
     const homeTeam = premierLeagueTeams[match.home];
     const awayTeam = premierLeagueTeams[match.away];
     
-    const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id);
+    const prediction = PredictionEngine.predictMatchSync(homeTeam, awayTeam, match.id);
     
     return {
       match: match.matchName,

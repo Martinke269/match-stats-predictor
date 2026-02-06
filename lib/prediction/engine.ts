@@ -27,7 +27,48 @@ export interface PredictionOptions {
  */
 export class PredictionEngine {
   /**
-   * Calculate match prediction based on team statistics and form
+   * Calculate match prediction synchronously (without news impact analysis)
+   * @param homeTeam - Home team data
+   * @param awayTeam - Away team data
+   * @param matchId - Unique match identifier
+   * @param options - Optional configuration including winter break detection and head-to-head data
+   */
+  static predictMatchSync(
+    homeTeam: Team,
+    awayTeam: Team,
+    matchId: string,
+    options?: Omit<PredictionOptions, 'enableNewsImpact'>
+  ): Prediction {
+    // Analyze all factors
+    const factorAnalysis = analyzeFactors(homeTeam, awayTeam, options as FactorOptions);
+
+    // Calculate base probabilities and predicted score
+    const probabilityResult = calculateProbabilities(
+      homeTeam,
+      awayTeam,
+      factorAnalysis,
+      {
+        afterWinterBreak: options?.afterWinterBreak,
+        headToHead: options?.headToHead
+      }
+    );
+
+    return {
+      matchId,
+      homeWinProbability: probabilityResult.homeWinProbability,
+      drawProbability: probabilityResult.drawProbability,
+      awayWinProbability: probabilityResult.awayWinProbability,
+      predictedScore: {
+        home: probabilityResult.predictedHomeGoals,
+        away: probabilityResult.predictedAwayGoals
+      },
+      confidence: probabilityResult.confidence,
+      factors: factorAnalysis.factors
+    };
+  }
+
+  /**
+   * Calculate match prediction based on team statistics and form (async with news impact)
    * @param homeTeam - Home team data
    * @param awayTeam - Away team data
    * @param matchId - Unique match identifier

@@ -68,7 +68,7 @@ export function generateLigue1Predictions(): {
     const homeTeam = ligue1Teams[match.home];
     const awayTeam = ligue1Teams[match.away];
     
-    const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id);
+    const prediction = PredictionEngine.predictMatchSync(homeTeam, awayTeam, match.id);
     
     return {
       match: match.matchName,

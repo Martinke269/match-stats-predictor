@@ -78,7 +78,7 @@ export function generateLaLigaPredictions(): {
       throw new Error(`Missing team data for ${match.matchName}`);
     }
     
-    const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id);
+    const prediction = PredictionEngine.predictMatchSync(homeTeam, awayTeam, match.id);
     
     return {
       match: match.matchName,

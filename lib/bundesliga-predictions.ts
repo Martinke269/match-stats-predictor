@@ -68,7 +68,7 @@ export function generateBundesligaPredictions(): {
     const homeTeam = bundesligaTeams[match.home];
     const awayTeam = bundesligaTeams[match.away];
     
-    const prediction = PredictionEngine.predictMatch(homeTeam, awayTeam, match.id);
+    const prediction = PredictionEngine.predictMatchSync(homeTeam, awayTeam, match.id);
     
     return {
       match: match.matchName,

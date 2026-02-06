@@ -80,5 +80,5 @@ export const serieAMatches: Match[] = [
 // Generate predictions for all matches
 export const serieAPredictions = serieAMatches.map(match => ({
   match,
-  prediction: PredictionEngine.predictMatch(match.homeTeam, match.awayTeam, match.id)
+  prediction: PredictionEngine.predictMatchSync(match.homeTeam, match.awayTeam, match.id)
 }));
