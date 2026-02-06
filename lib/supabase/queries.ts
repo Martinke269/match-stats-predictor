@@ -10,7 +10,7 @@ type PredictionRow = Database['public']['Tables']['predictions']['Row'];
 function rowToTeam(row: TeamRow): Team {
   const stats = row.stats as any;
   return {
-    id: row.name.toLowerCase().replace(/\s+/g, '-'),
+    id: row.id, // Use database UUID directly instead of generating from name
     name: row.name,
     form: row.form,
     stats: {
@@ -108,18 +108,16 @@ export async function getMatchesByLeague(league: string): Promise<Match[]> {
     return [];
   }
   
-  const matches: Match[] = [];
-  for (const match of matchesData) {
-    if (match.home_team && match.away_team) {
-      matches.push(await rowToMatch(
-        match as MatchRow,
-        match.home_team as TeamRow,
-        match.away_team as TeamRow
-      ));
-    }
-  }
+  // Use Promise.all to process matches in parallel instead of sequential loop
+  const matchPromises = matchesData
+    .filter(match => match.home_team && match.away_team)
+    .map(match => rowToMatch(
+      match as MatchRow,
+      match.home_team as TeamRow,
+      match.away_team as TeamRow
+    ));
   
-  return matches;
+  return Promise.all(matchPromises);
 }
 
 // Get upcoming matches (scheduled status)
@@ -148,18 +146,16 @@ export async function getUpcomingMatches(league?: string): Promise<Match[]> {
     return [];
   }
   
-  const matches: Match[] = [];
-  for (const match of data) {
-    if (match.home_team && match.away_team) {
-      matches.push(await rowToMatch(
-        match as MatchRow,
-        match.home_team as TeamRow,
-        match.away_team as TeamRow
-      ));
-    }
-  }
+  // Use Promise.all to process matches in parallel instead of sequential loop
+  const matchPromises = data
+    .filter(match => match.home_team && match.away_team)
+    .map(match => rowToMatch(
+      match as MatchRow,
+      match.home_team as TeamRow,
+      match.away_team as TeamRow
+    ));
   
-  return matches;
+  return Promise.all(matchPromises);
 }
 
 // Get prediction for a match
@@ -293,24 +289,23 @@ export async function getPredictionsWithMatches(limit: number = 50): Promise<Arr
     return [];
   }
   
-  const results: Array<{ prediction: PredictionRow; match: Match }> = [];
-  
-  for (const item of data) {
-    if (item.match && item.match.home_team && item.match.away_team) {
+  // Use Promise.all to process predictions in parallel instead of sequential loop
+  const resultPromises = data
+    .filter(item => item.match && item.match.home_team && item.match.away_team)
+    .map(async (item) => {
       const match = await rowToMatch(
         item.match as MatchRow,
         item.match.home_team as TeamRow,
         item.match.away_team as TeamRow
       );
       
-      results.push({
+      return {
         prediction: item as PredictionRow,
         match
-      });
-    }
-  }
+      };
+    });
   
-  return results;
+  return Promise.all(resultPromises);
 }
 
 // Update prediction with actual results

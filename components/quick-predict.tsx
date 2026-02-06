@@ -11,6 +11,7 @@ import { Loader2, Search, TrendingUp, Target, Shield, Zap, AlertCircle } from 'l
 import { Team, Prediction } from '@/lib/types';
 import { PredictionEngine } from '@/lib/prediction-engine';
 import { Progress } from '@/components/ui/progress';
+import { CalculationLoggerClient } from '@/lib/calculation-logger-client';
 
 export function QuickPredict() {
   const [homeTeamName, setHomeTeamName] = useState('');
@@ -52,12 +53,27 @@ export function QuickPredict() {
       setAwayTeam(data.awayTeam);
 
       // Generate prediction
+      const startTime = Date.now();
       const pred = PredictionEngine.predictMatch(
         data.homeTeam,
         data.awayTeam,
         `quick-${Date.now()}`
       );
+      const calculationDuration = Date.now() - startTime;
+      
       setPrediction(pred);
+
+      // Log calculation to database (async, don't wait)
+      CalculationLoggerClient.logCalculation({
+        homeTeam: data.homeTeam,
+        awayTeam: data.awayTeam,
+        prediction: pred,
+        league: data.homeTeam.league,
+        calculationDurationMs: calculationDuration,
+        requestSource: 'quick-predict',
+      }).catch(err => {
+        console.error('Failed to log calculation:', err);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Der opstod en fejl');
     } finally {

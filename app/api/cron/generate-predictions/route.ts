@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { PredictionEngine } from '@/lib/prediction-engine';
+import { CalculationLogger } from '@/lib/calculation-logger';
+import { calculateTeamQuality, calculateFormScore } from '@/lib/prediction/calculators';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +33,12 @@ export async function GET(request: Request) {
 
     if (matchesError) {
       console.error('Error fetching matches:', matchesError);
+      await CalculationLogger.logError({
+        errorType: 'error',
+        errorCode: 'CRON_FETCH_MATCHES_FAILED',
+        errorMessage: matchesError.message,
+        systemState: { matchesError }
+      });
       return NextResponse.json({ error: 'Failed to fetch matches' }, { status: 500 });
     }
 
@@ -44,6 +52,8 @@ export async function GET(request: Request) {
     // Generate predictions for each match
     for (const match of matches) {
       try {
+        const startTime = Date.now();
+
         // Generate prediction using the prediction engine
         const prediction = PredictionEngine.predictMatch(
           match.home_team,
@@ -51,7 +61,33 @@ export async function GET(request: Request) {
           match.id
         );
 
-        // Store prediction in database
+        const calculationDuration = Date.now() - startTime;
+
+        // Calculate intermediate data for logging
+        const homeQuality = calculateTeamQuality(match.home_team);
+        const awayQuality = calculateTeamQuality(match.away_team);
+        const homeFormScore = calculateFormScore(match.home_team.form);
+        const awayFormScore = calculateFormScore(match.away_team.form);
+
+        // Log the complete calculation
+        const calculationId = await CalculationLogger.logCalculation({
+          matchId: match.id,
+          homeTeam: match.home_team,
+          awayTeam: match.away_team,
+          prediction,
+          league: match.league, // Pass league from match data
+          calculationDurationMs: calculationDuration,
+          requestSource: 'cron',
+          intermediateData: {
+            homeQualityScore: homeQuality,
+            awayQualityScore: awayQuality,
+            qualityGap: Math.abs(homeQuality - awayQuality),
+            homeFormScore,
+            awayFormScore
+          }
+        });
+
+        // Store prediction in legacy predictions table (for backward compatibility)
         const { error: insertError } = await supabase
           .from('predictions')
           .insert({
@@ -67,11 +103,27 @@ export async function GET(request: Request) {
 
         if (insertError) {
           errors.push(`Match ${match.id}: ${insertError.message}`);
+          await CalculationLogger.logError({
+            matchId: match.id,
+            errorType: 'warning',
+            errorCode: 'LEGACY_PREDICTION_INSERT_FAILED',
+            errorMessage: insertError.message,
+            requestData: { calculationId }
+          });
         } else {
           generatedCount++;
         }
       } catch (error) {
-        errors.push(`Match ${match.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push(`Match ${match.id}: ${errorMessage}`);
+        await CalculationLogger.logError({
+          matchId: match.id,
+          errorType: 'error',
+          errorCode: 'PREDICTION_GENERATION_FAILED',
+          errorMessage,
+          errorStack: error instanceof Error ? error.stack : undefined,
+          requestData: { match }
+        });
       }
     }
 
@@ -84,6 +136,12 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Error in generate-predictions cron:', error);
+    await CalculationLogger.logError({
+      errorType: 'error',
+      errorCode: 'CRON_FATAL_ERROR',
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
